@@ -1,6 +1,6 @@
 const path = require('path');
 const userDb = require('../Models/userModel');
-
+const bcrypt = require('bcrypt');
 exports.getRegistrationPage = (req, res) => {
     res.sendFile(path.join(__dirname, "..", "Views", "RegistrationPage.html"));
 };
@@ -14,9 +14,8 @@ exports.postRegistrationData = async (req, res) => {
     const name = body.nameInput;
     const phoneNo = body.phoneInput;
     const email = body.emailInput;
-    const passWord = body.passwordInput;
-
     try {
+        const passWord = await bcrypt.hash(body.passwordInput, 10);
         await userDb.create({
             name: name,
             phoneNo: phoneNo,
@@ -44,13 +43,8 @@ exports.checkLogin = async (req, res) => {
             }
         })
         if (data) {
-            const loginCheck = await userDb.findOne({
-                where: {
-                    email: email,
-                    passWord: passWord
-                }
-            });
-            if (loginCheck) {
+            const checkLogin = await bcrypt.compare(passWord, data.passWord);
+            if (checkLogin) {
                 res.status(201).json({ data: 'success' });
             }
             else {
