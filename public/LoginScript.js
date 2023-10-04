@@ -10,6 +10,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         const result = await axios.post('/user/check-login', data);
         if (result.data.data === 'success') {
             alert('Login Successful');
+            window.location = '/expense/expenseMain';
         }
     } catch (error) {
         if (error.response.data.data === 'Failed') {

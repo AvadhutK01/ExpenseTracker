@@ -1,0 +1,10 @@
+const express = require('express');
+const expenseController = require('../Controllers/expenseController');
+const expenseRoutes = express.Router();
+expenseRoutes.get('/expenseMain', expenseController.getExpenseMainPage);
+expenseRoutes.post('/post-expense', expenseController.addExpense);
+expenseRoutes.get('/viewExpenses', expenseController.getExpensesViewPage);
+expenseRoutes.get('/viewExpensesData', expenseController.getExpensesData);
+expenseRoutes.post('/deleteExpensedata', expenseController.deleteExpenseData);
+expenseRoutes.post('/update-expense', expenseController.updateExpense);
+module.exports = expenseRoutes;
