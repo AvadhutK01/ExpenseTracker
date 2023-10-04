@@ -23,12 +23,46 @@ exports.postRegistrationData = async (req, res) => {
             email: email,
             passWord: passWord
         });
-        res.json({ data: 'success' });
+        res.status(201).json({ data: 'success' })
     } catch (err) {
         if (err.name === 'SequelizeUniqueConstraintError') {
-            res.json({ data: 'exist' });
+            res.status(409).json({ data: 'exist' });
         } else {
-            res.json({ data: 'error' });
+            res.status(500).json({ data: 'error' });
         }
     }
 };
+
+exports.checkLogin = async (req, res) => {
+    const body = req.body;
+    const email = req.body.email;
+    const passWord = req.body.password;
+    try {
+        let data = await userDb.findOne({
+            where: {
+                email: email
+            }
+        })
+        if (data) {
+            const loginCheck = await userDb.findOne({
+                where: {
+                    email: email,
+                    passWord: passWord
+                }
+            });
+            if (loginCheck) {
+                res.status(201).json({ data: 'success' });
+            }
+            else {
+                res.status(401).json({ data: 'Failed' });
+            }
+        }
+        else {
+            res.status(404).json({ data: 'NotExist' });
+        }
+    }
+    catch (err) {
+        console.log(err);
+        res.status(500).json({ data: 'error' });
+    }
+}

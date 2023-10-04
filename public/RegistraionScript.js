@@ -26,14 +26,14 @@ document.getElementById("registrationForm").addEventListener("submit", async fun
             if (data.data === "success") {
                 alert("Registration successful! You will be redirected to the login page now.");
                 window.location = '/user/login';
-            } else if (data.data === "exist") {
+            }
+        } catch (error) {
+            if (error.response.data.data === "exist") {
                 alert("User already exists! Check the credentials you have entered or click on login.");
             } else {
                 alert("Something went wrong!");
             }
-        } catch (error) {
-            alert("Something went wrong!");
-            console.error('Error:', error);
+            console.error(error);
         }
     } else {
         alert('Passwords do not match.');
