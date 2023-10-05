@@ -3,7 +3,6 @@ let tabelbody = document.getElementById("tablebody");
 document.addEventListener('DOMContentLoaded', fetchData());
 
 async function fetchData() {
-    //console.log(token)
     const token = localStorage.getItem('token');
     const result = await axios.get('/expense/viewExpensesData', {
         headers: {

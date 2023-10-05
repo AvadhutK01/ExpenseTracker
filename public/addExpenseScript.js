@@ -9,6 +9,11 @@ Premiumbtn.type = 'button';
 Premiumbtn.className = "btn btn-primary";
 Premiumbtn.id = "btnPremumSubmit";
 Premiumbtn.textContent = 'Buy Premium Membership';
+const LeaderBoardbtn = document.createElement('button');
+LeaderBoardbtn.type = 'button';
+LeaderBoardbtn.className = "btn btn-primary";
+LeaderBoardbtn.id = "btnPremumSubmit";
+LeaderBoardbtn.textContent = 'View LeaderBoard';
 if (updateData) {
     btnSubmit.textContent = 'Update';
     ExpenseAmount.value = updateData.expenseAmount;
@@ -25,6 +30,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         if (response.data.result === "false") {
             PremiumDiv.appendChild(Premiumbtn);
+        }
+        else if (response.data.result === "true") {
+            PremiumDiv.innerHTML = '<h5>Premium User</h5>';
+            PremiumDiv.appendChild(LeaderBoardbtn);
         }
     } catch (error) {
         alert('Something Went Wrong!');
@@ -108,4 +117,8 @@ Premiumbtn.addEventListener('click', async (e) => {
     } catch (error) {
         console.log(error)
     }
+});
+
+LeaderBoardbtn.addEventListener('click', () => {
+    window.location.href = '/expense/leaderBoardPage';
 })
