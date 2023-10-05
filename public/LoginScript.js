@@ -8,9 +8,11 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     };
     try {
         const result = await axios.post('/user/check-login', data);
+        // console.log(result.data.token)
         if (result.data.data === 'success') {
             alert('Login Successful');
-            window.location = '/expense/expenseMain';
+            localStorage.setItem('token', result.data.token);
+            window.location = `/expense/MainHome/`;
         }
     } catch (error) {
         if (error.response.data.data === 'Failed') {

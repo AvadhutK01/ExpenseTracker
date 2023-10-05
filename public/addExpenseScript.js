@@ -21,10 +21,12 @@ document.getElementById('AddExpenseForm').addEventListener('submit', async (e) =
         };
 
         if (updateData) {
+            const token = localStorage.getItem('token');
             const id = updateData.id;
             let response = await axios.post('/expense/update-expense', { id, data }, {
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": token
                 }
             });
             const result = response.data;
@@ -34,9 +36,11 @@ document.getElementById('AddExpenseForm').addEventListener('submit', async (e) =
                 window.location = '/expense/expenseMain';
             }
         } else {
+            const token = localStorage.getItem('token');
             let response = await axios.post('/expense/post-expense', data, {
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": token
                 }
             });
             const result = response.data;
