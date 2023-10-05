@@ -25,7 +25,7 @@ exports.addExpense = async (req, res) => {
             userDatumId: id
         });
 
-        await userDb.update({ totalExpense: totalExpense + expenseAmount }, { where: { id: id } })
+        await userDb.update({ totalExpense: totalExpense + expenseAmount }, { where: { id: id } });
         res.status(201).json({ data: 'success' })
     } catch (err) {
         console.log(err)
@@ -50,9 +50,14 @@ exports.getExpensesData = async (req, res) => {
 
 exports.deleteExpenseData = async (req, res) => {
     try {
-        const id = req.body.id
+        const id = req.body.id;
+        const expenseAmount = parseInt(req.body.ExpenseAmount);
+        console.log(expenseAmount)
         const userid = req.user.id;
+        const result = await userDb.findByPk(userid, { attributes: ['totalExpense'] });
+        const totalExpense = parseInt(result.totalExpense);
         await ExpenseData.destroy({ where: { id: id, userDatumId: userid } });
+        await userDb.update({ totalExpense: totalExpense - expenseAmount }, { where: { id: userid } })
         res.redirect('/expense/viewExpenses');
     }
     catch (err) {
@@ -65,21 +70,28 @@ exports.updateExpense = async (req, res) => {
     const body = req.body;
     const id = body.id;
     const userid = req.user.id;
-    const expenseAmount = body.data.ExpenseAmount;
-    const description = body.data.ExpenseDesc;
-    const expenseType = body.data.ExpenseType;
+    const newExpenseAmount = parseInt(body.data.ExpenseAmount);
+    const newDescription = body.data.ExpenseDesc;
+    const newExpenseType = body.data.ExpenseType;
+
     try {
         const expenseData = await ExpenseData.findOne({ where: { id: id, userDatumId: userid } });
-        expenseData.expenseAmount = expenseAmount;
-        expenseData.description = description;
-        expenseData.expenseType = expenseType;
+        const oldExpenseAmount = expenseData.expenseAmount;
+        const expenseAmountDifference = newExpenseAmount - oldExpenseAmount;
+        expenseData.expenseAmount = newExpenseAmount;
+        expenseData.description = newDescription;
+        expenseData.expenseType = newExpenseType;
         await expenseData.save();
-        res.status(201).json({ data: 'success' })
+        const result = await userDb.findByPk(userid, { attributes: ['totalExpense'] });
+        const totalExpense = parseInt(result.totalExpense);
+        await userDb.update({ totalExpense: totalExpense + expenseAmountDifference }, { where: { id: userid } });
+        res.status(201).json({ data: 'success' });
     } catch (err) {
-        console.log(err)
+        console.log(err);
         res.status(500).json({ data: 'error' });
     }
 }
+
 
 exports.getLeaderBoardPage = (req, res) => {
     res.sendFile(path.join(__dirname, "..", "Views", "expenseLeaderBoard.html"));
