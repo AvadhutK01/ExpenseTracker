@@ -9,8 +9,6 @@ async function fetchData() {
 
 
 async function displayData(data) {
-    data.sort((a, b) => b.amount - a.amount);
-
     tabelbody.innerText = "";
     if (data.length > 0) {
         for (let i = 0; i < data.length; i++) {
@@ -25,7 +23,7 @@ async function displayData(data) {
             tr.appendChild(td1);
             let td2 = document.createElement("td");
             td2.id = "td2";
-            td2.appendChild(document.createTextNode(data[i].amount));
+            td2.appendChild(document.createTextNode(data[i].total_amount));
             tr.appendChild(td2);
             tabelbody.appendChild(tr);
         }

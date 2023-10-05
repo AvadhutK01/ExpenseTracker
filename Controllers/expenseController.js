@@ -1,6 +1,7 @@
 const path = require('path');
 const ExpenseData = require('../Models/ExpenseModel');
 const userDb = require('../Models/userModel');
+const sequelize = require('../dbConnection');
 exports.getExpenseMainHomePage = (req, res) => {
     res.sendFile(path.join(__dirname, "..", "Views", "mainHome.html"));
 };
@@ -81,29 +82,20 @@ exports.getLeaderBoardPage = (req, res) => {
 
 exports.getLeaderBoardData = async (req, res) => {
     try {
-        const response = await ExpenseData.findAll();
-        const dataMap = new Map();
-
-        for (let i = 0; i < response.length; i++) {
-            const userid = response[i].userDatumId;
-            const user = await userDb.findOne({ where: { id: userid } });
-            const expenseAmount = parseInt(response[i].expenseAmount);
-
-            if (dataMap.has(user.name)) {
-                dataMap.set(user.name, dataMap.get(user.name) + expenseAmount);
-            } else {
-                dataMap.set(user.name, expenseAmount);
-            }
-        }
-
-        let leaderboardData = [];
-        dataMap.forEach((value, key) => {
-            leaderboardData.push({
-                name: key,
-                amount: value
-            });
+        const LeaderBoardData = await userDb.findAll({
+            attributes: [
+                'id',
+                'name',
+                [sequelize.fn('sum', sequelize.col('expenseData.expenseAmount')), 'total_amount']
+            ],
+            include: [{
+                model: ExpenseData,
+                attributes: [],
+            }],
+            group: ['userdata.id'],
+            order: [[sequelize.col('total_amount'), 'DESC']]
         });
-        res.status(200).json(leaderboardData);
+        res.status(200).json(LeaderBoardData);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error });
