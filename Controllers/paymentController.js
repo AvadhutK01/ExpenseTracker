@@ -1,7 +1,9 @@
 const Razorpay = require("razorpay");
 const OrderData = require("../Models/paymentModel");
 const userDb = require("../Models/userModel");
+const sequelize = require("../dbConnection");
 module.exports.purchasePremium = async (req, res) => {
+    const t = await sequelize.transaction();
     try {
         const rzp = new Razorpay({
             key_id: process.env.RAZORPAYKEYID,
@@ -10,11 +12,13 @@ module.exports.purchasePremium = async (req, res) => {
         const amount = 2000;
 
         const result = await rzp.orders.create({ amount, currency: 'INR' });
-        const response = await OrderData.create({ orderid: result.id, status: 'PENDING', userDatumId: req.user.id });
+        const response = await OrderData.create({ orderid: result.id, status: 'PENDING', userDatumId: req.user.id }, { transaction: t });
         if (response) {
+            await t.commit();
             return res.status(201).json({ result, key_id: rzp.key_id });
         }
     } catch (error) {
+        await t.rollback();
         console.log(error);
         return res.status(500).json({ error: 'Internal Server Error' });
     }
