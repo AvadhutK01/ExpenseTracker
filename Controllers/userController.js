@@ -63,5 +63,5 @@ exports.checkLogin = async (req, res) => {
 }
 
 function generateAccessToken(id) {
-    return jwt.sign({ userid: id }, '8jR2sWnC4xQzHtUyL6vPbM9aZ3gD7eF1sK0oT8iN6cA2mV3zL7jX8wO9tR0hY5sF1iE3oQ1cK6gW2hS4aJ5bP9eV0jU4iO2qD6rH3lN9mS7tP1rY2gT8bA1uO3zR')
+    return jwt.sign({ userid: id }, process.env.SECRETKEY)
 }

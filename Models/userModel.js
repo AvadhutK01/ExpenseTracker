@@ -25,6 +25,11 @@ let userDb = sequelize.define('userData', {
     passWord: {
         type: Sequelize.STRING,
         allowNull: false
+    },
+    isPremium: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+        allowNull: false
     }
 })
 module.exports = userDb;

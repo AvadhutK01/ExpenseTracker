@@ -8,6 +8,9 @@ const sequelize = require('./dbConnection');
 const expenseRoutes = require('./Routers/expenseRoutes');
 const userDb = require('./Models/userModel');
 const ExpenseData = require('./Models/ExpenseModel');
+const payRoute = require('./Routers/paymentRoutes');
+require('dotenv').config();
+const OrderData = require('./Models/paymentModel');
 const app = express();
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
@@ -15,9 +18,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json())
 app.use("/user", userRoute);
 app.use('/expense', expenseRoutes)
+app.use('/payment', payRoute);
 app.use(router);
 userDb.hasMany(ExpenseData);
 ExpenseData.belongsTo(userDb);
+userDb.hasMany(OrderData);
+OrderData.belongsTo(userDb);
 sequelize.sync().then(() => app.listen(3000)).catch((err) => {
     console.log(err)
 })
