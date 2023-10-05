@@ -30,6 +30,11 @@ let userDb = sequelize.define('userData', {
         type: Sequelize.BOOLEAN,
         defaultValue: false,
         allowNull: false
+    },
+    totalExpense: {
+        type: Sequelize.DECIMAL,
+        allowNull: false,
+        defaultValue: 0
     }
 })
 module.exports = userDb;

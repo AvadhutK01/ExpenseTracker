@@ -12,18 +12,23 @@ exports.getExpenseMainPage = (req, res) => {
 exports.addExpense = async (req, res) => {
     const body = req.body;
     const id = req.user.id;
-    const expenseAmount = body.ExpenseAmount;
+    const expenseAmount = parseInt(body.ExpenseAmount);
     const description = body.ExpenseDesc;
     const expenseType = body.ExpenseType;
     try {
+        const result = await userDb.findByPk(id, { attributes: ['totalExpense'] });
+        const totalExpense = parseInt(result.totalExpense)
         await ExpenseData.create({
             expenseAmount: expenseAmount,
             description: description,
             expenseType: expenseType,
             userDatumId: id
         });
+
+        await userDb.update({ totalExpense: totalExpense + expenseAmount }, { where: { id: id } })
         res.status(201).json({ data: 'success' })
     } catch (err) {
+        console.log(err)
         res.status(500).json({ data: 'error' });
     }
 }
@@ -84,16 +89,10 @@ exports.getLeaderBoardData = async (req, res) => {
     try {
         const LeaderBoardData = await userDb.findAll({
             attributes: [
-                'id',
                 'name',
-                [sequelize.fn('sum', sequelize.col('expenseData.expenseAmount')), 'total_amount']
+                'totalExpense'
             ],
-            include: [{
-                model: ExpenseData,
-                attributes: [],
-            }],
-            group: ['userdata.id'],
-            order: [[sequelize.col('total_amount'), 'DESC']]
+            order: [[sequelize.col('totalExpense'), 'DESC']]
         });
         res.status(200).json(LeaderBoardData);
     } catch (error) {

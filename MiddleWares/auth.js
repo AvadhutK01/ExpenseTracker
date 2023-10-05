@@ -3,7 +3,6 @@ const userDb = require("../Models/userModel");
 const authnticateUser = async (req, res, next) => {
     try {
         const token = req.header('Authorization');
-        console.log(token)
         const user = jwt.verify(token, process.env.SECRETKEY);
         const result = await userDb.findByPk(user.userid);
         req.user = result;

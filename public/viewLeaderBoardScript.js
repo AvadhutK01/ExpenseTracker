@@ -23,7 +23,7 @@ async function displayData(data) {
             tr.appendChild(td1);
             let td2 = document.createElement("td");
             td2.id = "td2";
-            td2.appendChild(document.createTextNode(data[i].total_amount));
+            td2.appendChild(document.createTextNode(data[i].totalExpense));
             tr.appendChild(td2);
             tabelbody.appendChild(tr);
         }
