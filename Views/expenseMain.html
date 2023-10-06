@@ -15,30 +15,12 @@
     <div class="container mt-5">
         <div class="row justify-content-center">
             <div class="col-md-6">
-                <form id="AddExpenseForm">
-                    <h2 class="mb-4 text-center">Add Expense!</h2>
-                    <div class="mb-3">
-                        <label for="ExpenseAmount" class="form-label">Expense Amount:</label>
-                        <input type="number" class="form-control" id="ExpenseAmount" name="ExpenseAmount"
-                            placeholder="Enter amount of you have spent" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="ExpenseDesc" class="form-label">Description:</label>
-                        <textarea type="text" class="form-control" id="ExpenseDesc" name="ExpenseDesc"
-                            placeholder="Enter some Description about Expense done" required></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="ExpenseType" class="form-label">Expense Type:</label>
-                        <select class="form-select" id="ExpenseType" name="ExpenseType" required>
-                            <option value="" disabled selected>Choose Expense Type</option>
-                            <option>Food</option>
-                            <option>Shopping</option>
-                            <option>Traveling</option>
-                            <option>Other Expenses</option>
-                        </select>
-                    </div>
-                    <div class="text-center">
-                        <button type="submit" class="btn btn-primary" id="btnSubmit">Submit</button>
+                <div class="mb-3 text-center">
+                    <button class="btn btn-primary" id="btnShowExpenseForm">Expense</button>
+                    <button class="btn btn-primary" id="btnShowIncomeForm">Income</button>
+                </div>
+                <form id="AddDataForm">
+                    <div id="DataDiv">
                     </div>
                 </form>
                 <div class="text-center mt-4" id="PremiumDiv">
@@ -52,6 +34,66 @@
             </div>
         </div>
     </div>
+    <script>
+        const form = document.getElementById('AddDataForm');
+        const expenseDiv = document.getElementById("DataDiv");
+        const expenseButton = document.getElementById("btnShowExpenseForm");
+        const incomeButton = document.getElementById("btnShowIncomeForm");
+        function showExpenseForm() {
+            expenseDiv.innerHTML = `
+                    <h2 class="mb-4 text-center">Add Expense!</h2>
+                    <div class="mb-3">
+                        <label for="Amount" class="form-label">Expense Amount:</label>
+                        <input type="number" class="form-control" id="Amount" name="Amount" placeholder="Enter amount you have spent" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="Desc" class="form-label">Description:</label>
+                        <textarea type="text" class="form-control" id="Desc" name="Desc" placeholder="Enter some Description about Expense done" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="Type" class="form-label">Expense Type:</label>
+                        <select class="form-select" id="Type" name="Type" required>
+                            <option value="" disabled selected>Choose Expense Type</option>
+                            <option>Food</option>
+                            <option>Shopping</option>
+                            <option>Traveling</option>
+                            <option>Other Expenses</option>
+                        </select>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary" id="btnExpenseSubmit">Submit</button>
+                    </div>`;
+
+        }
+        showExpenseForm();
+        expenseButton.addEventListener("click", function () {
+            showExpenseForm();
+        });
+        incomeButton.addEventListener("click", function () {
+            expenseDiv.innerHTML = `
+                <h2 class="mb-4 text-center">Add Income!</h2>
+                <div class="mb-3">
+                    <label for="Amount" class="form-label">Income Amount:</label>
+                    <input type="number" class="form-control" id="Amount" name="Amount" placeholder="Enter Income amount" required>
+                </div>
+                <div class="mb-3">
+                    <label for="Desc" class="form-label">Description:</label>
+                    <textarea type="text" class="form-control" id="Desc" name="Desc" placeholder="Enter some Description about Income" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="Type" class="form-label">Income Type:</label>
+                    <select class="form-select" id="Type" name="Type" required>
+                        <option value="" disabled selected>Choose Income Type</option>
+                        <option>Salary</option>
+                        <option>Profit</option>
+                        <option>Other Income</option>
+                    </select>
+                </div>
+                <div class="text-center">
+                        <button type="submit" class="btn btn-primary" id="btnIncomeSubmit">Submit</button>
+                    </div>`;
+        });
+    </script>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
         integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
         crossorigin="anonymous"></script>
