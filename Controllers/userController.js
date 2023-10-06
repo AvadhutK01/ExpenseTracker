@@ -3,7 +3,8 @@ const userDb = require('../Models/userModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const sequelize = require('../dbConnection');
-
+var SibApiV3Sdk = require('sib-api-v3-sdk');
+const nodemailer = require('nodemailer');
 exports.getRegistrationPage = (req, res) => {
     res.sendFile(path.join(__dirname, "..", "Views", "RegistrationPage.html"));
 };
@@ -75,6 +76,30 @@ exports.checkLogin = async (req, res) => {
         res.status(500).json({ data: 'error' });
     }
 };
+
+exports.forgetPassword = async (req, res) => {
+    try {
+        const email = req.body.emailId;
+        var defaultClient = SibApiV3Sdk.ApiClient.instance;
+        var apiKey = defaultClient.authentications['api-key'];
+        apiKey.apiKey = process.env.FORGETPASSWORDKEY;
+        var apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+        const sender = { email: "kelaskaravadhut11@gmail.com" };
+        const receivers = [{ email: `${email}` }];
+        apiInstance.sendTransacEmail({
+            sender,
+            to: receivers,
+            subject: "hello",
+            textContent: "Hello"
+        }).then(() => {
+            res.status(202).json({ message: 'success' });
+        })
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).send();
+    }
+}
 
 function generateAccessToken(id) {
     return jwt.sign({ userid: id }, process.env.SECRETKEY);
