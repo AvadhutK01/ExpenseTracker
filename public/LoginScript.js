@@ -1,25 +1,7 @@
-const forgotBtn = document.getElementById('forgotBtn')
-if (forgotBtn) {
-    forgotBtn.addEventListener('click', async (e) => {
-        const emailId = document.getElementById('EmailId').value;
-        if (emailId == '') {
-            alert('Please Enter Valid Email Address!');
-        } else {
-            try {
-                const response = await axios.post('/user/forgetPassword', { emailId });
-                if (response.data.message == 'success') {
-                    alert('Email Sent successfully check the email for further instructions!');
-                    window.location.href = '/user/login';
-                }
-            } catch (error) {
-                console.log(error);
-                alert('Something went wrong!');
-            }
-        }
-    })
-}
-else {
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+const forgotBtn = document.getElementById('forgotBtn');
+const btnSubmit = document.getElementById('loginForm');
+if (btnSubmit) {
+    btnSubmit.addEventListener('submit', async (e) => {
         e.preventDefault();
         const emailInput = document.getElementById('EmailInput').value;
         const passwordInput = document.getElementById('PasswordInput').value;
@@ -47,4 +29,25 @@ else {
         }
     });
 }
+if (forgotBtn) {
+    forgotBtn.addEventListener('click', async (e) => {
+        const emailId = document.getElementById('EmailId').value;
+        if (emailId == '') {
+            alert('Please Enter Valid Email Address!');
+        } else {
+            try {
+                const response = await axios.post('/user/SendforgetPasswordLink', { emailId }
+                );
+                if (response.data.message == 'success') {
+                    alert('Email Sent successfully check the email for further instructions!');
+                    window.location.href = '/user/login';
+                }
+            } catch (error) {
+                console.log(error);
+                alert('Something went wrong!');
+            }
+        }
+    })
+}
+
 
