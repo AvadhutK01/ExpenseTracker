@@ -15,4 +15,5 @@ expenseRoutes.get('/viewMonetaryData', moneyController.getViewMonetaryPage);
 expenseRoutes.get('/viewYearlyExpensesData', authnticateUser, moneyController.getYearlyExpensesData);
 expenseRoutes.post('/download', authnticateUser, moneyController.downloadExpense);
 expenseRoutes.get('/getDownloadUrl', authnticateUser, moneyController.getDownloadUrl);
+expenseRoutes.get('/viewReportExpensesData', authnticateUser, moneyController.viewReportExpensesData);
 module.exports = expenseRoutes;

@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', fetchData);
 
 async function fetchData() {
     const token = localStorage.getItem('token');
-    const result = await axios.get('/expense/viewExpensesData', {
+    const result = await axios.get('/expense/viewReportExpensesData', {
         headers: {
             "Authorization": token
         }
@@ -35,35 +35,53 @@ async function fetchData() {
     });
 
     const currentDate = new Date();
-    const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-    const formattedDate = currentDate.toLocaleDateString('en-US', options);
-    const [month, day, year] = formattedDate.split('/');
-    const today = `${year}-${month}-${day}`;
+    const formattedDate = currentDate.toLocaleDateString('en-US');
+    const [day, month, year] = formattedDate.split('/');
+    const today = `${month}/${day}/${year}`;
     const thisWeekStart = new Date(currentDate);
     thisWeekStart.setDate(currentDate.getDate() - currentDate.getDay());
-    const thisWeekStartFormatted = thisWeekStart.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const thisWeekStartFormatted = `${thisWeekStart.getDate()}/${thisWeekStart.getMonth() + 1}/${thisWeekStart.getFullYear()}`;
     const thisMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const thisMonthStartFormatted = thisMonthStart.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
-    const dailyData = result.data.filter(item => item.updatedAt.startsWith(today));
-    const weeklyData = result.data.filter(item => item.updatedAt >= thisWeekStartFormatted);
-    const monthlyData = result.data.filter(item => item.updatedAt >= thisMonthStartFormatted);
+    const thisMonthStartFormatted = `${thisMonthStart.getDate()}/${thisMonthStart.getMonth() + 1}/${thisMonthStart.getFullYear()}`;
 
+    const dailyData = result.data.filter(item => {
+        const [itemDay, itemMonth, itemYear] = item.date.split('/');
+        const itemDate = new Date(`${itemYear}/${itemMonth}/${itemDay}`);
+        const formattedItemDate = `${itemDate.getDate()}/${itemDate.getMonth() + 1}/${itemDate.getFullYear()}`;
+        return formattedItemDate === today;
+    });
+
+    const weeklyData = result.data.filter(item => {
+        const [itemDay, itemMonth, itemYear] = item.date.split('/');
+        const itemDate = new Date(`${itemDay}/${itemMonth / 1}-${itemYear}`).toDateString();
+        return itemDate >= thisWeekStartFormatted;
+    });
+    const monthlyData = result.data.filter(item => {
+        const [itemDay, itemMonth, itemYear] = item.date.split('/');
+        const itemDate = new Date(itemYear, itemMonth - 1, itemDay).toDateString();
+        return itemDate >= thisMonthStartFormatted;
+    });
+    const currentYear = new Date().getFullYear();
+    const yearlyData = yearlyResult.data.filter(item => {
+        const [itemMonth, itemYear] = item.year.split('-').map(Number);
+        return itemYear === currentYear;
+    });
     displayData(dailyData, table1, tablebody1, dailyDataArray);
     displayData(weeklyData, table2, tablebody2, weeklyDataArray);
     displayData(monthlyData, table3, tablebody3, monthlyDataArray);
-    displayYearlyReport(yearlyResult.data, table4, tablebody4, yearlyDataArray);
+    displayYearlyReport(yearlyData, table4, tablebody4, yearlyDataArray);
     displayDownloadUrl(DownloadUrl.data, table5, tablebody5);
 }
 
 async function displayData(data, tablebody, table, dataArray) {
-    tablebody.innerHTML = '';
+    clearTableBody(tablebody);
     if (data.length > 0) {
         for (let i = 0; i < data.length; i++) {
             let tr = document.createElement("tr");
             tr.className = 'text-center'
             let td1 = document.createElement("td");
             td1.id = "td1";
-            td1.appendChild(document.createTextNode(new Date(data[i].updatedAt).toISOString().split('T')[0]));
+            td1.appendChild(document.createTextNode(data[i].date));
             tr.appendChild(td1);
             let td2 = document.createElement("td");
             td2.id = "td2";
@@ -90,6 +108,7 @@ async function displayData(data, tablebody, table, dataArray) {
                 type: data[i].type
             });
         }
+        flag = false;
     }
     else {
         table.innerHTML = "<div class='text-center'><h5>No Data Found</h5></div>";
@@ -98,7 +117,7 @@ async function displayData(data, tablebody, table, dataArray) {
 }
 
 async function displayYearlyReport(data, tablebody, table, dataArray) {
-    tablebody.innerHTML = '';
+    await clearTableBody(tablebody);
     if (data.length > 0) {
         for (let i = 0; i < data.length; i++) {
             let dateParts = data[i].year.split('-');
@@ -139,8 +158,8 @@ async function displayYearlyReport(data, tablebody, table, dataArray) {
     }
 }
 
-function displayDownloadUrl(data, table, tablebody) {
-    tablebody.innerHTML = '';
+async function displayDownloadUrl(data, table, tablebody) {
+    await clearTableBody(tablebody);
     if (data.length > 0) {
         for (let i = 0; i < data.length; i++) {
             let tr = document.createElement("tr");
@@ -169,13 +188,30 @@ function displayDownloadUrl(data, table, tablebody) {
     }
 }
 
-btnDownload.addEventListener('click', async (e) => {
+btnDownload.addEventListener('click', (e) => {
+    $('#downloadModal').modal('show');
+    const downloadAllButton = document.getElementById('BtnAllDownload');
+    const downloadReportButton = document.getElementById('BtnReportDownload');
+    downloadAllButton.addEventListener('click', () => {
+        downloadData('All');
+        $('#downloadModal').modal('hide');
+    });
+    downloadReportButton.addEventListener('click', () => {
+        downloadData('Report');
+        $('#downloadModal').modal('hide');
+    });
+});
+
+
+async function downloadData(type) {
     const queryParams = {
         dailyData: dailyDataArray,
         weeklyData: weeklyDataArray,
         monthlyData: monthlyDataArray,
-        yearlyData: yearlyDataArray
+        yearlyData: yearlyDataArray,
+        downloadType: type
     };
+
     try {
         const token = localStorage.getItem('token');
         const response = await axios.post('/expense/download', queryParams, {
@@ -188,11 +224,18 @@ btnDownload.addEventListener('click', async (e) => {
         a.click();
         fetchData();
     } catch (error) {
-        console.log(error)
+        console.log(error);
         alert('something went wrong');
     }
-});
+}
 
 
+
+async function clearTableBody(tablebody) {
+    const rows = tablebody.getElementsByTagName('tr');
+    for (let i = rows.length - 1; i > 0; i--) {
+        tablebody.removeChild(rows[i]);
+    }
+}
 
 

@@ -6,7 +6,6 @@ const sequelize = require('../dbConnection');
 var SibApiV3Sdk = require('sib-api-v3-sdk');
 const { v4: uuidv4 } = require('uuid');
 const forgetPasswordModel = require('../Models/forgetPasswordModel');
-const { where } = require('sequelize');
 
 exports.getRegistrationPage = (req, res) => {
     res.sendFile(path.join(__dirname, "..", "Views", "RegistrationPage.html"));
@@ -22,11 +21,12 @@ exports.postRegistrationData = async (req, res) => {
     const phoneNo = body.phoneInput;
     const email = body.emailInput;
     const passwordInput = body.passwordInput;
-
+    const date = formatDate(new Date().toLocaleDateString());
     const t = await sequelize.transaction();
     try {
         const passWord = await bcrypt.hash(passwordInput, 10);
         await userDb.create({
+            date: date,
             name: name,
             phoneNo: phoneNo,
             email: email,
@@ -141,12 +141,13 @@ exports.getForgetPasswordPage = async (req, res) => {
 exports.updatePasswordData = async (req, res) => {
     const id = req.body.id;
     const password = req.body.password;
+    const date = formatDate(new Date().toLocaleDateString());
     const t = await sequelize.transaction();
     try {
         const response = await forgetPasswordModel.findOne({ where: { id: id }, attributes: ['userDatumId'], transaction: t });
         const userId = response.userDatumId;
         const passWordHashed = await bcrypt.hash(password, 10);
-        await userDb.update({ passWord: passWordHashed }, { where: { id: userId }, transaction: t });
+        await userDb.update({ date: date, passWord: passWordHashed }, { where: { id: userId }, transaction: t });
         await t.commit();
         res.status(200).json({ message: 'Password updated successfully' });
     } catch (error) {
@@ -158,4 +159,11 @@ exports.updatePasswordData = async (req, res) => {
 
 function generateAccessToken(id) {
     return jwt.sign({ userid: id }, process.env.SECRETKEY);
+}
+
+function formatDate(currentDate) {
+    const [month, day, year] = currentDate.split('/');
+    const formattedDate = `${day}/${month}/${year}`;
+
+    return formattedDate;
 }

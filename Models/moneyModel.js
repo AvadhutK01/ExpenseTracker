@@ -6,6 +6,10 @@ const moneyData = sequelize.define('moneyData', {
         primaryKey: true,
         autoIncrement: true
     },
+    date: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
     Amount: {
         type: Sequelize.DECIMAL,
         allowNull: false

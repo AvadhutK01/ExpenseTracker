@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchData(rowsPerPage, 1);
 });
 async function fetchData(rowsPerPage, page) {
-    // const page = 1;
     const token = localStorage.getItem('token');
     const result = await axios.get(`/expense/viewExpensesData?page=${page}&rows=${rowsPerPage}`, {
         headers: {
@@ -121,14 +120,3 @@ function showPagination({
         PaginationDiv.appendChild(btn3)
     }
 }
-
-// async function displayDataWithPage(page) {
-//     const token = localStorage.getItem('token');
-//     const result = await axios.get(`/expense/viewExpensesData?page=${page}`, {
-//         headers: {
-//             "Authorization": token
-//         }
-//     });
-//     displayData(result.data.result)
-//     showPagination(result.data);
-// }

@@ -23,6 +23,7 @@ exports.addExpense = async (req, res) => {
     const description = body.Desc;
     const sourceType = body.Type;
     const Etype = body.Etype;
+    const date = formatDate(new Date().toLocaleDateString());
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1;
     const currentYear = currentDate.getFullYear();
@@ -40,12 +41,12 @@ exports.addExpense = async (req, res) => {
         }
         await moneyData.create({
             Amount: Amount,
+            date: date,
             description: description,
             sourceType: sourceType,
             type: Etype,
             userDatumId: id
         }, { transaction: t });
-        console.log(Yearlyresult)
         if (Etype == 'Expense') {
             if (Yearlyresult && Yearlyresult.length > 0) {
                 if (Yearlyresult[0].year == formattedDate) {
@@ -56,7 +57,7 @@ exports.addExpense = async (req, res) => {
                 await yearlyReportDb.create({ year: formattedDate, TotalExpense: Amount, userDatumId: id }, { transaction: t })
             }
             await calculateAndUpdateSavings(id, formattedDate, t);
-            await userDb.update({ totalExpense: totalExpense + Amount }, { where: { id: id }, transaction: t });
+            await userDb.update({ date: date, totalExpense: totalExpense + Amount }, { where: { id: id }, transaction: t });
         }
         else {
             if (Yearlyresult && Yearlyresult.length > 0) {
@@ -68,7 +69,7 @@ exports.addExpense = async (req, res) => {
                 await yearlyReportDb.create({ year: formattedDate, TotalIncomme: Amount, userDatumId: id }, { transaction: t })
             }
             await calculateAndUpdateSavings(id, formattedDate, t);
-            await userDb.update({ totalIncome: totalIncome + Amount }, { where: { id: id }, transaction: t });
+            await userDb.update({ date: date, totalIncome: totalIncome + Amount }, { where: { id: id }, transaction: t });
         }
 
         await t.commit();
@@ -130,7 +131,7 @@ exports.getDownloadUrl = async (req, res) => {
 }
 exports.deleteExpenseData = async (req, res) => {
     const t = await sequelize.transaction();
-
+    const date = formatDate(new Date().toLocaleDateString());
     try {
         const id = req.body.id;
         const userid = req.user.id;
@@ -159,10 +160,10 @@ exports.deleteExpenseData = async (req, res) => {
 
         if (Etype === 'Expense') {
             await yearlyReportDb.update({ TotalExpense: YearlytotalExpense - Amount, Savings: savings + Amount }, { where: { userDatumId: userid, year: formattedDate }, transaction: t });
-            await userDb.update({ totalExpense: totalExpense - Amount }, { where: { id: userid }, transaction: t });
+            await userDb.update({ date: date, totalExpense: totalExpense - Amount }, { where: { id: userid }, transaction: t });
         } else {
             await yearlyReportDb.update({ TotalIncomme: YearlytotalIncome - Amount, Savings: savings - Amount }, { where: { userDatumId: userid, year: formattedDate }, transaction: t });
-            await userDb.update({ totalIncome: totalIncome - Amount }, { where: { id: userid }, transaction: t });
+            await userDb.update({ date: date, totalIncome: totalIncome - Amount }, { where: { id: userid }, transaction: t });
         }
 
         await t.commit();
@@ -176,7 +177,7 @@ exports.deleteExpenseData = async (req, res) => {
 
 exports.updateExpense = async (req, res) => {
     const t = await sequelize.transaction();
-
+    const date = formatDate(new Date().toLocaleDateString());
     try {
         const body = req.body;
         const id = body.id;
@@ -185,14 +186,13 @@ exports.updateExpense = async (req, res) => {
         const newExpenseAmount = parseInt(body.data.Amount);
         const newDescription = body.data.Desc;
         const newExpenseType = body.data.Type;
-        console.log(newExpenseType)
         const moneyDatavalue = await moneyData.findOne({ where: { id: id, userDatumId: userid }, transaction: t });
         const oldExpenseAmount = parseInt(moneyDatavalue.Amount);
         const updatedAt = moneyDatavalue.updatedAt;
         const currentMonth = updatedAt.getMonth() + 1;
         const currentYear = updatedAt.getFullYear();
         const formattedDate = `${currentMonth.toString().padStart(2, '0')}-${currentYear}`;
-
+        moneyDatavalue.date = date;
         moneyDatavalue.Amount = parseInt(newExpenseAmount);
         moneyDatavalue.description = newDescription;
         moneyDatavalue.sourceType = newExpenseType;
@@ -213,10 +213,10 @@ exports.updateExpense = async (req, res) => {
 
         if (Etype == 'Expense') {
             await yearlyReportDb.update({ TotalExpense: YearlytotalExpense - TotalexpenseAmountDifference, Savings: savings + TotalexpenseAmountDifference }, { where: { userDatumId: userid, year: formattedDate }, transaction: t });
-            await userDb.update({ totalExpense: totalExpense - expenseAmountDifference }, { where: { id: userid }, transaction: t });
+            await userDb.update({ date: date, totalExpense: totalExpense - expenseAmountDifference }, { where: { id: userid }, transaction: t });
         } else {
             await yearlyReportDb.update({ TotalIncomme: YearlytotalIncome - TotalexpenseAmountDifference, Savings: savings - TotalexpenseAmountDifference }, { where: { userDatumId: userid, year: formattedDate }, transaction: t });
-            await userDb.update({ totalIncome: totalIncome - expenseAmountDifference }, { where: { id: userid }, transaction: t });
+            await userDb.update({ date: date, totalIncome: totalIncome - expenseAmountDifference }, { where: { id: userid }, transaction: t });
         }
 
         await t.commit();
@@ -255,51 +255,96 @@ exports.getViewMonetaryPage = (req, res) => {
 }
 
 
+
 exports.downloadExpense = async (req, res) => {
     const userId = req.user.id;
-    const date = new Date().toLocaleString().replace(/\//g, '-')
-    const { dailyData, weeklyData, monthlyData, yearlyData } = req.body;
+    const date = new Date().toLocaleString().replace(/\//g, '-');
+    const downloadType = req.body.downloadType;
+    let buffer;
+    let fileName;
+    if (downloadType == 'Report') {
 
-    const yearlyDataValues = [
-        ['Section', 'MonthYear', 'Total Income', 'Total Expense', 'Savings'],
-        ...createDataArrayWithYearlySection('Yearly Data', yearlyData),
-    ]
-    const allData = [
-        ['Section', 'Date', 'Amount', 'SourceType', 'Description', 'Type'],
-        ...createDataArrayWithSection('Daily Data', dailyData),
-        ...createDataArrayWithSection('Weekly Data', weeklyData),
-        ...createDataArrayWithSection('Monthly Data', monthlyData),
-        ...yearlyDataValues
-    ];
-    function createDataArrayWithSection(section, data) {
-        return data.map(item => [section, item.date, item.amount, item.sourceType, item.description, item.type]);
-    }
+        const { dailyData, weeklyData, monthlyData, yearlyData } = req.body;
 
-    function createDataArrayWithYearlySection(section, data) {
-        return data.map(item => [section, item.monthYear, item.totalIncome, item.totalExpense, item.savings]);
+        function createDataArrayWithSection(data) {
+            return data.map(item => [item.date, item.amount, item.sourceType, item.description, item.type]);
+        }
+
+        function createDataArrayWithYearlySection(data) {
+            return data.map(item => [item.monthYear, item.totalIncome, item.totalExpense, item.savings]);
+        }
+        const allData = [
+            ['Daily Data'],
+            ['Date', 'Amount', 'SourceType', 'Description', 'Type'],
+            ...createDataArrayWithSection(dailyData),
+            [],
+            ['Weekly Data'],
+            ['Date', 'Amount', 'SourceType', 'Description', 'Type'],
+            ...createDataArrayWithSection(weeklyData),
+            [],
+            ['Monthly Data'],
+            ['Date', 'Amount', 'SourceType', 'Description', 'Type'],
+            ...createDataArrayWithSection(monthlyData),
+            [],
+            ['Yearly Data'],
+            ['MonthYear', 'Total Income', 'Total Expense', 'Savings'],
+            ...createDataArrayWithYearlySection(yearlyData)
+        ];
+
+        const worksheet = XLSX.utils.aoa_to_sheet(allData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Combined Data');
+        buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+        fileName = `expense${userId}/Report_date-${date}.xlsx`;
     }
-    const worksheet = XLSX.utils.aoa_to_sheet(allData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Combined Data');
-    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
-    const fileName = `expense${userId}/Report_date-${date}.xlsx`;
-    await uploadToS3('mynewexpensebucket', buffer, fileName)
-        .then(async (fileUrl) => {
-            res.setHeader('Content-Disposition', 'attachment; filename=expense.xlsx');
-            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            await DurlDb.create({
-                date: date,
-                fileUrl: fileUrl,
-                userDatumId: userId
+    else if (downloadType == 'All') {
+        const result = await moneyData.findAll({ where: { userDatumId: userId } });
+
+        function createDataArrayWithAllData(data) {
+            return data.map(item => [item.date, item.Amount, item.sourceType, item.description, item.type]);
+        }
+
+        const allData = [
+            ['All Data'],
+            ['Date', 'Amount', 'SourceType', 'Description', 'Type'],
+            ...createDataArrayWithAllData(result)
+        ];
+
+        const worksheet = XLSX.utils.aoa_to_sheet(allData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'All Data');
+        buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+        fileName = `expense${userId}/All_Data_date-${date}.xlsx`;
+    }
+    if (buffer != null && fileName != null) {
+        await uploadToS3('mynewexpensebucket', buffer, fileName)
+            .then(async (fileUrl) => {
+                res.setHeader('Content-Disposition', 'attachment; filename=expense.xlsx');
+                res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                await DurlDb.create({
+                    date: date,
+                    fileUrl: fileUrl,
+                    userDatumId: userId
+                });
+                res.status(200).json({ fileUrl, success: true });
+            })
+            .catch(error => {
+                console.error(error);
+                res.status(500).json({ error: error });
             });
-            res.status(200).json({ fileUrl, success: true });
-        })
-        .catch(error => {
-            console.error(error);
-            res.status(500).json({ error: 'Failed to upload file to S3' });
-        });
+    }
 }
 
+module.exports.viewReportExpensesData = async (req, res) => {
+    try {
+        const id = req.user.id;
+        const result = await moneyData.findAll({ where: { userDatumId: id } });
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ data: 'error' });
+        console.log(err);
+    }
+}
 
 
 
@@ -313,4 +358,11 @@ async function calculateAndUpdateSavings(id, formattedDate, t) {
         return savings;
     }
     return 0;
+}
+
+function formatDate(currentDate) {
+    const [month, day, year] = currentDate.split('/'); // Assuming the date format is MM/DD/YYYY
+    const formattedDate = `${day}/${month}/${year}`;
+
+    return formattedDate;
 }
