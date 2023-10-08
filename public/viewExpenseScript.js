@@ -1,15 +1,19 @@
 let tabel = document.getElementById("table");
 let tabelbody = document.getElementById("tablebody");
+const PaginationDiv = document.getElementById('paginationDiv');
 document.addEventListener('DOMContentLoaded', fetchData());
 
 async function fetchData() {
+    const page = 1;
     const token = localStorage.getItem('token');
-    const result = await axios.get('/expense/viewExpensesData', {
+    const result = await axios.get(`/expense/viewExpensesData?page=${page}`, {
         headers: {
             "Authorization": token
         }
     });
-    displayData(result.data)
+    console.log(result);
+    displayData(result.data.result)
+    showPagination(result.data);
 }
 
 async function displayData(data) {
@@ -81,4 +85,42 @@ async function deleteData(id, Amount, Etype) {
 async function setUpdate(data) {
     localStorage.setItem('updateData', JSON.stringify(data));
     window.location.href = '/expense/expenseMain';
+}
+
+function showPagination({
+    currentPage,
+    hasNextPage,
+    nextPage,
+    hasPreviousPage,
+    previousPage,
+    lastPage,
+}) {
+    PaginationDiv.innerHTML = '';
+    if (hasPreviousPage) {
+        const btn2 = document.createElement('button');
+        btn2.innerHTML = previousPage;
+        btn2.addEventListener('click', () => (displayDataWithPage(previousPage)));
+        PaginationDiv.appendChild(btn2)
+    }
+    const btn1 = document.createElement('button');
+    btn1.innerHTML = `${currentPage}`;
+    btn1.addEventListener('click', () => (displayDataWithPage(currentPage)));
+    PaginationDiv.appendChild(btn1);
+    if (hasNextPage) {
+        const btn3 = document.createElement('button');
+        btn3.innerHTML = nextPage;
+        btn3.addEventListener('click', () => (displayDataWithPage(nextPage)));
+        PaginationDiv.appendChild(btn3)
+    }
+}
+
+async function displayDataWithPage(page) {
+    const token = localStorage.getItem('token');
+    const result = await axios.get(`/expense/viewExpensesData?page=${page}`, {
+        headers: {
+            "Authorization": token
+        }
+    });
+    displayData(result.data.result)
+    showPagination(result.data);
 }

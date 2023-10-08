@@ -85,10 +85,22 @@ exports.getExpensesViewPage = (req, res) => {
 };
 
 exports.getExpensesData = async (req, res) => {
+    const limit = 2;
+    let totalItems;
     try {
+        const page = +req.query.page || 1;
         const id = req.user.id;
-        const result = await moneyData.findAll({ where: { userDatumId: id } });
-        res.json(result);
+        totalItems = await moneyData.count({ where: { userDatumId: id } });
+        const result = await moneyData.findAll({ where: { userDatumId: id }, offset: (page - 1) * limit, limit: limit });
+        res.json({
+            result,
+            currentPage: page,
+            hasNextPage: limit * page < totalItems,
+            nextPage: page + 1,
+            hasPreviousPage: page > 1,
+            previousPage: page - 1,
+            lastPage: Math.ceil(totalItems / limit)
+        });
     } catch (err) {
         res.status(500).json({ data: 'error' });
         console.log(err);
