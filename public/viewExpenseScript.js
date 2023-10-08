@@ -1,17 +1,25 @@
 let tabel = document.getElementById("table");
 let tabelbody = document.getElementById("tablebody");
 const PaginationDiv = document.getElementById('paginationDiv');
-document.addEventListener('DOMContentLoaded', fetchData());
-
-async function fetchData() {
-    const page = 1;
+const rowsPerPageSelect = document.getElementById("rowsPerPage");
+let rowsPerPage = localStorage.getItem('rowsperpage') != null ? localStorage.getItem('rowsperpage') : 5;
+document.addEventListener('DOMContentLoaded', () => {
+    rowsPerPageSelect.addEventListener("change", function () {
+        rowsPerPage = parseInt(rowsPerPageSelect.value);
+        localStorage.setItem('rowsperpage', rowsPerPage)
+        fetchData(rowsPerPage, 1);
+    });
+    rowsPerPageSelect.value = rowsPerPage;
+    fetchData(rowsPerPage, 1);
+});
+async function fetchData(rowsPerPage, page) {
+    // const page = 1;
     const token = localStorage.getItem('token');
-    const result = await axios.get(`/expense/viewExpensesData?page=${page}`, {
+    const result = await axios.get(`/expense/viewExpensesData?page=${page}&rows=${rowsPerPage}`, {
         headers: {
             "Authorization": token
         }
     });
-    console.log(result);
     displayData(result.data.result)
     showPagination(result.data);
 }
@@ -99,28 +107,28 @@ function showPagination({
     if (hasPreviousPage) {
         const btn2 = document.createElement('button');
         btn2.innerHTML = previousPage;
-        btn2.addEventListener('click', () => (displayDataWithPage(previousPage)));
+        btn2.addEventListener('click', () => (fetchData(rowsPerPage, previousPage)));
         PaginationDiv.appendChild(btn2)
     }
     const btn1 = document.createElement('button');
     btn1.innerHTML = `${currentPage}`;
-    btn1.addEventListener('click', () => (displayDataWithPage(currentPage)));
+    btn1.addEventListener('click', () => (fetchData(rowsPerPage, currentPage)));
     PaginationDiv.appendChild(btn1);
     if (hasNextPage) {
         const btn3 = document.createElement('button');
         btn3.innerHTML = nextPage;
-        btn3.addEventListener('click', () => (displayDataWithPage(nextPage)));
+        btn3.addEventListener('click', () => (fetchData(rowsPerPage, nextPage)));
         PaginationDiv.appendChild(btn3)
     }
 }
 
-async function displayDataWithPage(page) {
-    const token = localStorage.getItem('token');
-    const result = await axios.get(`/expense/viewExpensesData?page=${page}`, {
-        headers: {
-            "Authorization": token
-        }
-    });
-    displayData(result.data.result)
-    showPagination(result.data);
-}
+// async function displayDataWithPage(page) {
+//     const token = localStorage.getItem('token');
+//     const result = await axios.get(`/expense/viewExpensesData?page=${page}`, {
+//         headers: {
+//             "Authorization": token
+//         }
+//     });
+//     displayData(result.data.result)
+//     showPagination(result.data);
+// }
