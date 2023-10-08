@@ -1,10 +1,14 @@
 const Dataform = document.getElementById('AddDataForm');
-// const updateData = JSON.parse(localStorage.getItem('updateData'));
+const updateData1 = JSON.parse(localStorage.getItem('updateData'));
 const PremiumDiv = document.getElementById('PremiumDiv');
 const Premiumbtn = document.createElement('button');
+const Amount = document.getElementById('Amount');
+const Desc = document.getElementById('Desc');
+const Type = document.getElementById('Type');
 Premiumbtn.type = 'button';
 Premiumbtn.className = "btn btn-primary";
 Premiumbtn.id = "btnPremumSubmit";
+Premiumbtn.textContent = 'Buy Premium Membership';
 const Monetarybtn = document.createElement('button');
 Monetarybtn.type = 'button';
 Monetarybtn.className = "btn btn-primary";
@@ -15,12 +19,19 @@ LeaderBoardbtn.type = 'button';
 LeaderBoardbtn.className = "btn btn-primary";
 LeaderBoardbtn.id = "btnPremumSubmit";
 LeaderBoardbtn.textContent = 'View LeaderBoard';
-// if (updateData) {
-//     btnSubmit.textContent = 'Update';
-//     ExpenseAmount.value = updateData.expenseAmount;
-//     ExpenseDesc.value = updateData.description;
-//     ExpenseType.value = updateData.expenseType;
-// }
+if (updateData1) {
+    if (updateData1.type === 'Expense') {
+        let btnExpenseSubmit = document.getElementById('btnExpenseSubmit');
+        btnExpenseSubmit.textContent = 'Update';
+    }
+    else if (updateData1.type === 'Income') {
+        let btnIncomeSubmit = document.getElementById('btnIncomeSubmit');
+        btnIncomeSubmit.textContent = 'Update';
+    }
+    Amount.value = updateData1.Amount;
+    Desc.value = updateData1.description;
+    Type.value = updateData1.sourceType;
+}
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const token = localStorage.getItem('token');
@@ -41,15 +52,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('Something Went Wrong!');
     }
 })
-Dataform.addEventListener('submit', function (e) {
+Dataform.addEventListener('submit', async function (e) {
     e.preventDefault();
-    let btnExpenseSubmit = document.getElementById('btnExpenseSubmit');
-    let btnIncomeSubmit = document.getElementById('btnIncomeSubmit');
-    if (btnExpenseSubmit) {
-        addData('Expense');
-    }
-    if (btnIncomeSubmit) {
-        addData('Income');
+    if (updateData1) {
+        const Amount = document.getElementById('Amount');
+        const Desc = document.getElementById('Desc');
+        const Type = document.getElementById('Type');
+        const data = {
+            Amount: Amount.value,
+            Desc: Desc.value,
+            Type: Type.value,
+        };
+        const token = localStorage.getItem('token');
+        const id = updateData1.id;
+        const Etype = updateData1.type
+        let response = await axios.post('/expense/update-expense', { Etype, id, data }, {
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": token
+            }
+        });
+        const result = response.data;
+        if (result.data === "success") {
+            alert("Expense Updated Successfully!");
+            localStorage.removeItem('updateData');
+            window.location = '/expense/expenseMain';
+        }
+    } else {
+        let btnExpenseSubmit = document.getElementById('btnExpenseSubmit');
+        let btnIncomeSubmit = document.getElementById('btnIncomeSubmit');
+        if (btnExpenseSubmit) {
+            addData('Expense');
+        }
+        if (btnIncomeSubmit) {
+            addData('Income');
+        }
     }
 });
 Premiumbtn.addEventListener('click', async (e) => {

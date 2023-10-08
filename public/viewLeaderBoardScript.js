@@ -25,6 +25,10 @@ async function displayData(data) {
             td2.id = "td2";
             td2.appendChild(document.createTextNode(data[i].totalExpense));
             tr.appendChild(td2);
+            let td3 = document.createElement("td");
+            td3.id = "td3";
+            td3.appendChild(document.createTextNode(data[i].totalIncome));
+            tr.appendChild(td3);
             tabelbody.appendChild(tr);
         }
     } else {

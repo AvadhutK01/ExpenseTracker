@@ -12,4 +12,7 @@ expenseRoutes.post('/update-expense', authnticateUser, moneyController.updateExp
 expenseRoutes.get('/leaderBoardPage', moneyController.getLeaderBoardPage);
 expenseRoutes.get('/viewLeaderBoardData', moneyController.getLeaderBoardData);
 expenseRoutes.get('/viewMonetaryData', moneyController.getViewMonetaryPage);
+expenseRoutes.get('/viewYearlyExpensesData', authnticateUser, moneyController.getYearlyExpensesData);
+expenseRoutes.post('/download', authnticateUser, moneyController.downloadExpense);
+expenseRoutes.get('/getDownloadUrl', authnticateUser, moneyController.getDownloadUrl);
 module.exports = expenseRoutes;

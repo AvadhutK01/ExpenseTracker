@@ -35,6 +35,10 @@ let userDb = sequelize.define('userData', {
         type: Sequelize.DECIMAL,
         allowNull: false,
         defaultValue: 0
+    }, totalIncome: {
+        type: Sequelize.DECIMAL,
+        allowNull: false,
+        defaultValue: 0
     }
 })
 module.exports = userDb;

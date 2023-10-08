@@ -12,6 +12,8 @@ require('dotenv').config();
 const OrderData = require('./Models/paymentModel');
 const forgetPasswordModel = require('./Models/forgetPasswordModel');
 const moneyData = require('./Models/moneyModel');
+const yearlyReportDb = require('./Controllers/YearlyReportModel');
+const DurlDb = require('./Models/filesDownloadUrlModel');
 const app = express();
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
@@ -27,6 +29,10 @@ userDb.hasMany(OrderData);
 OrderData.belongsTo(userDb);
 userDb.hasMany(forgetPasswordModel);
 forgetPasswordModel.belongsTo(userDb);
+userDb.hasMany(yearlyReportDb);
+yearlyReportDb.belongsTo(userDb);
+userDb.hasMany(DurlDb);
+DurlDb.belongsTo(userDb);
 sequelize.sync().then(() => app.listen(3000)).catch((err) => {
     console.log(err)
 })

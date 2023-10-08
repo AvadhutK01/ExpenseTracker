@@ -39,9 +39,10 @@
         const expenseDiv = document.getElementById("DataDiv");
         const expenseButton = document.getElementById("btnShowExpenseForm");
         const incomeButton = document.getElementById("btnShowIncomeForm");
-        function showExpenseForm() {
+        const updateData = JSON.parse(localStorage.getItem('updateData'));
+        function showExpenseForm(str) {
             expenseDiv.innerHTML = `
-                    <h2 class="mb-4 text-center">Add Expense!</h2>
+            <h2 class="mb-4 text-center">${str} Expense!</h2>
                     <div class="mb-3">
                         <label for="Amount" class="form-label">Expense Amount:</label>
                         <input type="number" class="form-control" id="Amount" name="Amount" placeholder="Enter amount you have spent" required>
@@ -65,13 +66,9 @@
                     </div>`;
 
         }
-        showExpenseForm();
-        expenseButton.addEventListener("click", function () {
-            showExpenseForm();
-        });
-        incomeButton.addEventListener("click", function () {
+        function showIncomeForm(str) {
             expenseDiv.innerHTML = `
-                <h2 class="mb-4 text-center">Add Income!</h2>
+                <h2 class="mb-4 text-center">${str} Income!</h2>
                 <div class="mb-3">
                     <label for="Amount" class="form-label">Income Amount:</label>
                     <input type="number" class="form-control" id="Amount" name="Amount" placeholder="Enter Income amount" required>
@@ -92,7 +89,25 @@
                 <div class="text-center">
                         <button type="submit" class="btn btn-primary" id="btnIncomeSubmit">Submit</button>
                     </div>`;
-        });
+        }
+        showExpenseForm('Add');
+        if (updateData) {
+            if (updateData.type == 'Expense') {
+                showExpenseForm('Update');
+            }
+            else if (updateData.type == 'Income') {
+                showIncomeForm('Update');
+            }
+        }
+        else {
+            expenseButton.addEventListener("click", function () {
+
+                showExpenseForm('Add');
+            });
+            incomeButton.addEventListener("click", function () {
+                showIncomeForm('Add');
+            });
+        }
     </script>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
         integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
