@@ -21,7 +21,7 @@ module.exports.purchasePremium = async (req, res) => {
     } catch (error) {
         await t.rollback();
         console.log(error);
-        return res.status(500).json({ error: 'Internal Server Error' });
+        return res.status(500).json({ message: "Internal Server Error!" });
     }
 };
 
@@ -51,7 +51,7 @@ module.exports.updateTransaction = async (req, res) => {
     } catch (error) {
         await t.rollback();
         console.error(error);
-        return res.status(500).json({ success: false, message: "Internal Server Error" });
+        return res.status(500).json({ success: false, message: "Internal Server Error!" });
     }
 };
 
@@ -74,6 +74,6 @@ module.exports.checkPremium = async (req, res) => {
     } catch (error) {
         await t.rollback();
         console.error(error);
-        res.status(500).json({ success: false, message: "Internal Server Error" });
+        res.status(500).json({ success: false, message: "Internal Server Error!" });
     }
 };

@@ -3,8 +3,12 @@ let tabelbody = document.getElementById("tablebody");
 document.addEventListener('DOMContentLoaded', fetchData());
 
 async function fetchData() {
-    const result = await axios.get('/expense/viewLeaderBoardData');
-    displayData(result.data)
+    try {
+        const result = await axios.get('/expense/viewLeaderBoardData');
+        displayData(result.data)
+    } catch (error) {
+        alert('Internal Server Error!');
+    }
 }
 
 

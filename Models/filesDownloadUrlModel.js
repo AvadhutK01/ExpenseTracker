@@ -10,6 +10,10 @@ const DurlDb = sequelize.define('DurlData', {
         type: Sequelize.STRING,
         allowNull: false
     },
+    type: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
     fileUrl: {
         type: Sequelize.TEXT,
         allowNull: false

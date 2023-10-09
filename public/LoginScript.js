@@ -11,21 +11,20 @@ if (btnSubmit) {
         };
         try {
             const result = await axios.post('/user/check-login', data);
-            if (result.data.data === 'success') {
+            if (result.data.message === 'success') {
                 alert('Login Successful');
                 localStorage.setItem('token', result.data.token);
                 window.location = `/expense/MainHome/`;
             }
         } catch (error) {
-            if (error.response.data.data === 'Failed') {
+            if (error.response.data.message === 'Failed') {
                 alert("Invalid Credentials!");
-            } else if (error.response.data.data === 'NotExist') {
+            } else if (error.response.data.message === 'NotExist') {
                 alert("User not exist please register yourself first!");
             }
             else {
-                alert('something went wrong');
+                alert(error.response.data.message);
             }
-            console.error(error);
         }
     });
 }
@@ -43,8 +42,11 @@ if (forgotBtn) {
                     window.location.href = '/user/login';
                 }
             } catch (error) {
-                console.log(error);
-                alert('Something went wrong!');
+                if (error.response.data.status === 404) {
+                    alert(error.response.data.message);
+                } else {
+                    alert(error.response.data.message);
+                }
             }
         }
     })

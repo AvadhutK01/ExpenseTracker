@@ -13,6 +13,7 @@ const dailyDataArray = [];
 const weeklyDataArray = [];
 const monthlyDataArray = [];
 const yearlyDataArray = [];
+const totalSavingArray = [];
 const btnDownload = document.getElementById('btnDownload');
 document.addEventListener('DOMContentLoaded', fetchData);
 
@@ -36,45 +37,49 @@ async function fetchData() {
 
     const currentDate = new Date();
     const formattedDate = currentDate.toLocaleDateString('en-US');
-    const [day, month, year] = formattedDate.split('/');
-    const today = `${month}/${day}/${year}`;
-    const thisWeekStart = new Date(currentDate);
-    thisWeekStart.setDate(currentDate.getDate() - currentDate.getDay());
-    const thisWeekStartFormatted = `${thisWeekStart.getDate()}/${thisWeekStart.getMonth() + 1}/${thisWeekStart.getFullYear()}`;
+    const [month, day, year] = formattedDate.split('/');
+    const today = new Date(`${year}/${month}/${day}`);
+
+    const startOfWeek = new Date(currentDate);
+    const dayOfWeek = currentDate.getDay();
+    const diff = currentDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+    startOfWeek.setDate(diff);
+    const startOfWeekFormatted = new Date(`${startOfWeek.getFullYear()}/${startOfWeek.getMonth()}/${startOfWeek.getDate()}`)
     const thisMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-    const thisMonthStartFormatted = `${thisMonthStart.getDate()}/${thisMonthStart.getMonth() + 1}/${thisMonthStart.getFullYear()}`;
 
     const dailyData = result.data.filter(item => {
         const [itemDay, itemMonth, itemYear] = item.date.split('/');
         const itemDate = new Date(`${itemYear}/${itemMonth}/${itemDay}`);
-        const formattedItemDate = `${itemDate.getDate()}/${itemDate.getMonth() + 1}/${itemDate.getFullYear()}`;
-        return formattedItemDate === today;
+        return itemDate.toDateString() === today.toDateString();
     });
 
     const weeklyData = result.data.filter(item => {
         const [itemDay, itemMonth, itemYear] = item.date.split('/');
-        const itemDate = new Date(`${itemDay}/${itemMonth / 1}-${itemYear}`).toDateString();
-        return itemDate >= thisWeekStartFormatted;
+        const itemDate = new Date(`${itemYear}/${itemMonth}/${itemDay}`);
+        return itemDate >= startOfWeekFormatted;
     });
+
     const monthlyData = result.data.filter(item => {
         const [itemDay, itemMonth, itemYear] = item.date.split('/');
-        const itemDate = new Date(itemYear, itemMonth - 1, itemDay).toDateString();
-        return itemDate >= thisMonthStartFormatted;
+        const itemDate = new Date(`${itemYear}/${itemMonth}/${itemDay}`);
+        return itemDate >= thisMonthStart;
     });
+
     const currentYear = new Date().getFullYear();
     const yearlyData = yearlyResult.data.filter(item => {
         const [itemMonth, itemYear] = item.year.split('-').map(Number);
         return itemYear === currentYear;
     });
+
     displayData(dailyData, table1, tablebody1, dailyDataArray);
     displayData(weeklyData, table2, tablebody2, weeklyDataArray);
     displayData(monthlyData, table3, tablebody3, monthlyDataArray);
     displayYearlyReport(yearlyData, table4, tablebody4, yearlyDataArray);
     displayDownloadUrl(DownloadUrl.data, table5, tablebody5);
+
 }
 
 async function displayData(data, tablebody, table, dataArray) {
-    clearTableBody(tablebody);
     if (data.length > 0) {
         for (let i = 0; i < data.length; i++) {
             let tr = document.createElement("tr");
@@ -101,7 +106,7 @@ async function displayData(data, tablebody, table, dataArray) {
             tr.appendChild(td5);
             tablebody.appendChild(tr);
             dataArray.push({
-                date: new Date(data[i].updatedAt).toISOString().split('T')[0],
+                date: data[i].date,
                 amount: data[i].Amount,
                 sourceType: data[i].sourceType,
                 description: data[i].description,
@@ -117,8 +122,11 @@ async function displayData(data, tablebody, table, dataArray) {
 }
 
 async function displayYearlyReport(data, tablebody, table, dataArray) {
-    await clearTableBody(tablebody);
     if (data.length > 0) {
+        let totalIncome = 0;
+        let totalExpense = 0;
+        let savings = 0;
+        let TotalData = document.getElementById('TotalData');
         for (let i = 0; i < data.length; i++) {
             let dateParts = data[i].year.split('-');
             let month = parseInt(dateParts[0], 10);
@@ -145,6 +153,9 @@ async function displayYearlyReport(data, tablebody, table, dataArray) {
             td4.appendChild(document.createTextNode(data[i].Savings));
             tr.appendChild(td4);
             tablebody.appendChild(tr);
+            totalIncome = totalIncome + parseInt(data[i].TotalIncomme);
+            totalExpense = totalExpense + parseInt(data[i].TotalExpense)
+            savings += parseInt(data[i].Savings);
             dataArray.push({
                 monthYear: `${monthName} ${year}`,
                 totalIncome: data[i].TotalIncomme,
@@ -152,6 +163,12 @@ async function displayYearlyReport(data, tablebody, table, dataArray) {
                 savings: data[i].Savings
             });
         }
+        totalSavingArray.push({
+            TotalIncome: totalIncome,
+            TotalExpense: totalExpense,
+            TotalSaving: savings
+        });
+        TotalData.appendChild(document.createTextNode(`Total Income: ${totalIncome} Total Expenses: ${totalExpense} Total Savings: ${savings}`));
     }
     else {
         table.innerHTML = "<div class='text-center'><h5>No Data Found</h5></div>";
@@ -159,22 +176,29 @@ async function displayYearlyReport(data, tablebody, table, dataArray) {
 }
 
 async function displayDownloadUrl(data, table, tablebody) {
-    await clearTableBody(tablebody);
     if (data.length > 0) {
-        for (let i = 0; i < data.length; i++) {
+        for (var i = 0; i < data.length; i++) {
             let tr = document.createElement("tr");
             tr.className = 'text-center'
+            let td = document.createElement("td");
+            td.id = "td1";
+            td.appendChild(document.createTextNode(i + 1));
+            tr.appendChild(td);
             let td1 = document.createElement("td");
             td1.id = "td1";
             td1.appendChild(document.createTextNode(data[i].date));
             tr.appendChild(td1);
             let td2 = document.createElement("td");
+            td2.id = "td1";
+            td2.appendChild(document.createTextNode(data[i].type));
+            tr.appendChild(td2);
+            let td3 = document.createElement("td");
             let downloadLink = document.createElement("a");
             downloadLink.href = data[i].fileUrl;
             downloadLink.target = "_blank";
-            downloadLink.appendChild(document.createTextNode(document.innerHTML = `${data[i].fileUrl}`));
-            td2.appendChild(downloadLink);
-            tr.appendChild(td2);
+            downloadLink.appendChild(document.createTextNode('Download'));
+            td3.appendChild(downloadLink);
+            tr.appendChild(td3);
             tablebody.appendChild(tr);
         }
         let extraTr = document.createElement("tr");
@@ -209,6 +233,7 @@ async function downloadData(type) {
         weeklyData: weeklyDataArray,
         monthlyData: monthlyDataArray,
         yearlyData: yearlyDataArray,
+        totalSavingData: totalSavingArray,
         downloadType: type
     };
 
@@ -219,22 +244,18 @@ async function downloadData(type) {
                 "Authorization": token
             }
         });
+
         var a = document.createElement('a');
         a.href = response.data.fileUrl;
+        a.style.display = 'none';
+        document.body.appendChild(a);
         a.click();
-        fetchData();
+        setTimeout(function () {
+            window.location.reload();
+        }, 2000);
     } catch (error) {
         console.log(error);
         alert('something went wrong');
-    }
-}
-
-
-
-async function clearTableBody(tablebody) {
-    const rows = tablebody.getElementsByTagName('tr');
-    for (let i = rows.length - 1; i > 0; i--) {
-        tablebody.removeChild(rows[i]);
     }
 }
 

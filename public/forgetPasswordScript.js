@@ -7,12 +7,8 @@ document.getElementById('passwordForm').addEventListener('submit', async (e) => 
         try {
             const id = window.location.href.split('/')[5];
             const response = await axios.post('/user/updatePasswordData', { password, id });
-            if (response.status === 200) {
-                alert('Password updated successfully');
-                window.location.href = '/user/login';
-            } else {
-                alert('Failed to update password. Please try again later.');
-            }
+            alert(response.data.message);
+            window.location.href = '/user/login';
         } catch (error) {
             console.error(error);
             alert('Failed to update password. Please try again later.');

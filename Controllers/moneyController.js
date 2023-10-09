@@ -2,11 +2,10 @@ const path = require('path');
 const userDb = require('../Models/userModel');
 const sequelize = require('../dbConnection');
 const moneyData = require('../Models/moneyModel');
-const yearlyReportDb = require('./YearlyReportModel');
 const XLSX = require('xlsx');
-const AWS = require('aws-sdk');
 const { uploadToS3 } = require('../services/S3Services');
 const DurlDb = require('../Models/filesDownloadUrlModel');
+const yearlyReportDb = require('../Models/YearlyReportModel');
 exports.getExpenseMainHomePage = (req, res) => {
     res.sendFile(path.join(__dirname, "..", "Views", "mainHome.html"));
 };
@@ -73,11 +72,11 @@ exports.addExpense = async (req, res) => {
         }
 
         await t.commit();
-        res.status(201).json({ data: 'success' });
+        res.status(201).json({ message: 'Data Added Successfully' });
     } catch (err) {
         console.log(err);
         await t.rollback();
-        res.status(500).json({ data: 'error' });
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
@@ -93,7 +92,7 @@ exports.getExpensesData = async (req, res) => {
         const id = req.user.id;
         totalItems = await moneyData.count({ where: { userDatumId: id } });
         const result = await moneyData.findAll({ where: { userDatumId: id }, offset: (page - 1) * limit, limit: limit });
-        res.json({
+        res.status(200).json({
             result,
             currentPage: page,
             hasNextPage: limit * page < totalItems,
@@ -103,7 +102,7 @@ exports.getExpensesData = async (req, res) => {
             lastPage: Math.ceil(totalItems / limit)
         });
     } catch (err) {
-        res.status(500).json({ data: 'error' });
+        res.status(500).json({ message: 'Internal Server Error' });
         console.log(err);
     }
 };
@@ -112,9 +111,9 @@ exports.getYearlyExpensesData = async (req, res) => {
     try {
         const id = req.user.id;
         const result = await yearlyReportDb.findAll({ where: { userDatumId: id } });
-        res.json(result);
+        res.status(200).json(result);
     } catch (err) {
-        res.status(500).json({ data: 'error' });
+        res.status(500).json({ data: err });
         console.log(err);
     }
 }
@@ -123,12 +122,13 @@ exports.getDownloadUrl = async (req, res) => {
     try {
         const id = req.user.id;
         const result = await DurlDb.findAll({ where: { userDatumId: id } });
-        res.json(result);
+        res.status(200).json(result);
     } catch (err) {
-        res.status(500).json({ data: 'error' });
+        res.status(500).json({ message: 'Internal Server Error' });
         console.log(err);
     }
 }
+
 exports.deleteExpenseData = async (req, res) => {
     const t = await sequelize.transaction();
     const date = formatDate(new Date().toLocaleDateString());
@@ -171,7 +171,7 @@ exports.deleteExpenseData = async (req, res) => {
     } catch (err) {
         console.log(err);
         await t.rollback();
-        res.status(500).json({ data: 'error' });
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
@@ -220,14 +220,13 @@ exports.updateExpense = async (req, res) => {
         }
 
         await t.commit();
-        res.status(201).json({ data: 'success' });
+        res.status(200).json({ message: 'Expense Updated Successfully!' });
     } catch (err) {
         console.log(err);
         await t.rollback();
-        res.status(500).json({ data: 'error' });
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
-
 
 exports.getLeaderBoardPage = (req, res) => {
     res.sendFile(path.join(__dirname, "..", "Views", "expenseLeaderBoard.html"));
@@ -241,12 +240,15 @@ exports.getLeaderBoardData = async (req, res) => {
                 'totalExpense',
                 'totalIncome'
             ],
-            order: [[sequelize.col('totalExpense'), 'DESC']]
+            order: [
+                [sequelize.col('totalIncome'), 'DESC'],
+                [sequelize.col('totalExpense'), 'DESC']
+            ]
         });
         res.status(200).json(LeaderBoardData);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error });
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
@@ -254,18 +256,15 @@ exports.getViewMonetaryPage = (req, res) => {
     res.sendFile(path.join(__dirname, "..", "Views", "viewMonetaryData.html"));
 }
 
-
-
 exports.downloadExpense = async (req, res) => {
+    const t = await sequelize.transaction();
     const userId = req.user.id;
     const date = new Date().toLocaleString().replace(/\//g, '-');
     const downloadType = req.body.downloadType;
     let buffer;
     let fileName;
     if (downloadType == 'Report') {
-
-        const { dailyData, weeklyData, monthlyData, yearlyData } = req.body;
-
+        const { dailyData, weeklyData, monthlyData, yearlyData, totalSavingData } = req.body;
         function createDataArrayWithSection(data) {
             return data.map(item => [item.date, item.amount, item.sourceType, item.description, item.type]);
         }
@@ -273,22 +272,30 @@ exports.downloadExpense = async (req, res) => {
         function createDataArrayWithYearlySection(data) {
             return data.map(item => [item.monthYear, item.totalIncome, item.totalExpense, item.savings]);
         }
+
+        function createDataArrayWithSavingsSection(data) {
+            return data.map(item => [item.TotalIncome, item.TotalExpense, item.TotalSaving]);
+        }
         const allData = [
-            ['Daily Data'],
+            [' ', ' ', 'Daily Data', ' ', ' '],
             ['Date', 'Amount', 'SourceType', 'Description', 'Type'],
             ...createDataArrayWithSection(dailyData),
             [],
-            ['Weekly Data'],
+            [' ', ' ', 'Weekly Data', ' ', ' '],
             ['Date', 'Amount', 'SourceType', 'Description', 'Type'],
             ...createDataArrayWithSection(weeklyData),
             [],
-            ['Monthly Data'],
+            [' ', ' ', 'Monthly Data', ' ', ' '],
             ['Date', 'Amount', 'SourceType', 'Description', 'Type'],
             ...createDataArrayWithSection(monthlyData),
             [],
-            ['Yearly Data'],
+            [' ', 'Yearly Data', ' '],
             ['MonthYear', 'Total Income', 'Total Expense', 'Savings'],
-            ...createDataArrayWithYearlySection(yearlyData)
+            ...createDataArrayWithYearlySection(yearlyData),
+            [],
+            [' ', 'Total Savings', ' '],
+            ['Total Income', 'Total Expense', 'Total Savings'],
+            ...createDataArrayWithSavingsSection(totalSavingData)
         ];
 
         const worksheet = XLSX.utils.aoa_to_sheet(allData);
@@ -324,13 +331,16 @@ exports.downloadExpense = async (req, res) => {
                 await DurlDb.create({
                     date: date,
                     fileUrl: fileUrl,
+                    type: downloadType,
                     userDatumId: userId
-                });
+                }, { transaction: t });
+                await t.commit()
                 res.status(200).json({ fileUrl, success: true });
             })
-            .catch(error => {
+            .catch(async (error) => {
                 console.error(error);
-                res.status(500).json({ error: error });
+                await t.rollback()
+                res.status(500).json({ message: 'Internal Server Error' });
             });
     }
 }
@@ -339,30 +349,34 @@ module.exports.viewReportExpensesData = async (req, res) => {
     try {
         const id = req.user.id;
         const result = await moneyData.findAll({ where: { userDatumId: id } });
-        res.json(result);
+        res.status(200).json(result);
     } catch (err) {
-        res.status(500).json({ data: 'error' });
+        res.status(500).json({ message: 'Internal Server Error' });
         console.log(err);
     }
 }
 
-
-
 async function calculateAndUpdateSavings(id, formattedDate, t) {
-    const yearlyResult = await yearlyReportDb.findOne({ where: { userDatumId: id, year: formattedDate }, transaction: t });
-    if (yearlyResult) {
-        const totalExpense = parseInt(yearlyResult.TotalExpense);
-        const totalIncome = parseInt(yearlyResult.TotalIncomme);
-        const savings = parseInt(totalIncome - totalExpense);
-        await yearlyReportDb.update({ Savings: savings }, { where: { userDatumId: id, year: formattedDate }, transaction: t });
-        return savings;
+    try {
+        const yearlyResult = await yearlyReportDb.findOne({ where: { userDatumId: id, year: formattedDate }, transaction: t });
+        if (yearlyResult) {
+            const totalExpense = parseInt(yearlyResult.TotalExpense);
+            const totalIncome = parseInt(yearlyResult.TotalIncomme);
+            const savings = parseInt(totalIncome - totalExpense);
+            await yearlyReportDb.update({ Savings: savings }, { where: { userDatumId: id, year: formattedDate }, transaction: t });
+            await t.commit()
+            return savings;
+        }
+        return 0;
+    } catch (error) {
+        console.log(error);
+        await t.rollback();
+        return 0;
     }
-    return 0;
 }
 
 function formatDate(currentDate) {
-    const [month, day, year] = currentDate.split('/'); // Assuming the date format is MM/DD/YYYY
+    const [month, day, year] = currentDate.split('/');
     const formattedDate = `${day}/${month}/${year}`;
-
     return formattedDate;
 }

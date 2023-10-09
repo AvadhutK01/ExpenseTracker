@@ -23,15 +23,15 @@ document.getElementById("registrationForm").addEventListener("submit", async fun
             });
 
             const data = response.data;
-            if (data.data === "success") {
+            if (data.message === "success") {
                 alert("Registration successful! You will be redirected to the login page now.");
                 window.location = '/user/login';
             }
         } catch (error) {
-            if (error.response.data.data === "exist") {
+            if (error.response.data.message === "exist") {
                 alert("User already exists! Check the credentials you have entered or click on login.");
             } else {
-                alert("Something went wrong!");
+                alert(error.response.data.message);
             }
             console.error(error);
         }

@@ -13,14 +13,18 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchData(rowsPerPage, 1);
 });
 async function fetchData(rowsPerPage, page) {
-    const token = localStorage.getItem('token');
-    const result = await axios.get(`/expense/viewExpensesData?page=${page}&rows=${rowsPerPage}`, {
-        headers: {
-            "Authorization": token
-        }
-    });
-    displayData(result.data.result)
-    showPagination(result.data);
+    try {
+        const token = localStorage.getItem('token');
+        const result = await axios.get(`/expense/viewExpensesData?page=${page}&rows=${rowsPerPage}`, {
+            headers: {
+                "Authorization": token
+            }
+        });
+        displayData(result.data.result)
+        showPagination(result.data);
+    } catch (error) {
+        alert('Internal Server Error!');
+    }
 }
 
 async function displayData(data) {
@@ -73,18 +77,21 @@ async function displayData(data) {
 
 async function deleteData(id, Amount, Etype) {
     const token = localStorage.getItem('token');
-    try {
-        await axios.post(`/expense/deleteExpensedata`,
-            { id, Amount, Etype },
-            {
-                headers: {
-                    "Authorization": token
+    const isConfirmed = confirm('Are you sure you want to delete this data?');
+    if (isConfirmed) {
+        try {
+            await axios.post(`/expense/deleteExpensedata`,
+                { id, Amount, Etype },
+                {
+                    headers: {
+                        "Authorization": token
+                    }
                 }
-            }
-        );
-        window.location.href = '/expense/viewExpenses';
-    } catch (error) {
-        console.error(error);
+            );
+            window.location.href = '/expense/viewExpenses';
+        } catch (error) {
+            alert('Internal Server Error');
+        }
     }
 }
 

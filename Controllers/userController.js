@@ -34,14 +34,14 @@ exports.postRegistrationData = async (req, res) => {
         }, { transaction: t });
 
         await t.commit();
-        res.status(201).json({ data: 'success' });
+        res.status(201).json({ message: 'success' });
     } catch (err) {
         await t.rollback();
         if (err.name === 'SequelizeUniqueConstraintError') {
-            res.status(409).json({ data: 'exist' });
+            res.status(409).json({ message: 'exist' });
         } else {
             console.error(err);
-            res.status(500).json({ data: 'error' });
+            res.status(500).json({ message: 'Internal Server Error' });
         }
     }
 };
@@ -64,19 +64,19 @@ exports.checkLogin = async (req, res) => {
             const checkLogin = await bcrypt.compare(password, data.passWord);
             if (checkLogin) {
                 await t.commit();
-                res.status(201).json({ data: 'success', token: generateAccessToken(data.id) });
+                res.status(201).json({ message: 'success', token: generateAccessToken(data.id) });
             } else {
                 await t.rollback();
-                res.status(401).json({ data: 'Failed' });
+                res.status(401).json({ message: 'Failed' });
             }
         } else {
             await t.rollback();
-            res.status(404).json({ data: 'NotExist' });
+            res.status(404).json({ message: 'NotExist' });
         }
     } catch (err) {
         await t.rollback();
         console.error(err);
-        res.status(500).json({ data: 'error' });
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
@@ -100,17 +100,17 @@ exports.SendforgetPasswordLink = async (req, res) => {
             apiInstance.sendTransacEmail({
                 sender,
                 to: receivers,
-                subject: "hello",
+                subject: "Reset Password",
                 textContent: `click on given one time link to reset the password:  http://localhost:3000/user/forgetPassword/${id}`
             }).then(() => {
                 res.status(202).json({ message: 'success' });
             });
         } else {
-            res.status(404).send();
+            res.status(404).json({ message: 'User Not Found Check email address!' });
         }
     } catch (error) {
         console.log(error);
-        res.status(500).send();
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
@@ -127,14 +127,14 @@ exports.getForgetPasswordPage = async (req, res) => {
             } catch (error) {
                 await t.rollback();
                 console.log(error);
-                res.status(500).send();
+                res.status(500).json({ message: 'Internal Server Error' });
             }
         } else {
-            res.status(404).send();
+            res.status(404).json({ message: 'Url Not Exist Check Url' });
         }
     } catch (error) {
         console.log(error);
-        res.status(500).send();
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
@@ -149,11 +149,11 @@ exports.updatePasswordData = async (req, res) => {
         const passWordHashed = await bcrypt.hash(password, 10);
         await userDb.update({ date: date, passWord: passWordHashed }, { where: { id: userId }, transaction: t });
         await t.commit();
-        res.status(200).json({ message: 'Password updated successfully' });
+        res.status(200).json({ message: 'Password updated successfully!' });
     } catch (error) {
         await t.rollback();
         console.log(error);
-        res.status(500).send();
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
