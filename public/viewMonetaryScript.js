@@ -9,6 +9,11 @@ let table4 = document.getElementById("table4");
 let tablebody4 = document.getElementById("tablebody4");
 let table5 = document.getElementById("table5");
 let tablebody5 = document.getElementById("tablebody5");
+const noDataDayContainer = document.getElementById('noDataDayContainer');
+const noDataWeekContainer = document.getElementById('noDataWeekContainer');
+const noDataMonthContainer = document.getElementById('noDataMonthContainer');
+const noDataYearContainer = document.getElementById('noDataYearContainer');
+const noDataUrlContainer = document.getElementById('noDataUrlContainer');
 const dailyDataArray = [];
 const weeklyDataArray = [];
 const monthlyDataArray = [];
@@ -72,10 +77,10 @@ async function fetchData() {
             return itemYear === currentYear;
         });
 
-        displayData(dailyData, table1, tablebody1, dailyDataArray);
-        displayData(weeklyData, table2, tablebody2, weeklyDataArray);
-        displayData(monthlyData, table3, tablebody3, monthlyDataArray);
-        displayYearlyReport(yearlyData, table4, tablebody4, yearlyDataArray);
+        displayData(dailyData, table1, tablebody1, noDataDayContainer, dailyDataArray);
+        displayData(weeklyData, table2, tablebody2, noDataWeekContainer, weeklyDataArray);
+        displayData(monthlyData, table3, tablebody3, noDataMonthContainer, monthlyDataArray);
+        displayYearlyReport(yearlyData, table4, tablebody4, noDataYearContainer, yearlyDataArray);
         displayDownloadUrl(DownloadUrl.data, table5, tablebody5);
 
     } catch (error) {
@@ -84,7 +89,7 @@ async function fetchData() {
 
 }
 
-async function displayData(data, tablebody, table, dataArray) {
+async function displayData(data, tablebody, table, container, dataArray) {
     if (data.length > 0) {
         for (let i = 0; i < data.length; i++) {
             let tr = document.createElement("tr");
@@ -117,21 +122,25 @@ async function displayData(data, tablebody, table, dataArray) {
                 description: data[i].description,
                 type: data[i].type
             });
+            container.style.display = 'none';
         }
         flag = false;
     }
     else {
-        table.innerHTML = "<div class='text-center'><h5>No Data Found</h5></div>";
+        container.style.display = 'block';
     }
 
 }
 
-async function displayYearlyReport(data, tablebody, table, dataArray) {
+async function displayYearlyReport(data, tablebody, table, container, dataArray) {
+    const totalDataContainer = document.getElementById('totalDataContainer');
+    const totalIncomeValue = document.getElementById('totalIncomeValue');
+    const totalExpensesValue = document.getElementById('totalExpensesValue');
+    const totalSavingsValue = document.getElementById('totalSavingsValue');
     if (data.length > 0) {
         let totalIncome = 0;
         let totalExpense = 0;
         let savings = 0;
-        let TotalData = document.getElementById('TotalData');
         for (let i = 0; i < data.length; i++) {
             let dateParts = data[i].year.split('-');
             let month = parseInt(dateParts[0], 10);
@@ -173,10 +182,14 @@ async function displayYearlyReport(data, tablebody, table, dataArray) {
             TotalExpense: totalExpense,
             TotalSaving: savings
         });
-        TotalData.appendChild(document.createTextNode(`Total Income: ${totalIncome} Total Expenses: ${totalExpense} Total Savings: ${savings}`));
+        container.style.display = 'none';
+        totalIncomeValue.textContent = totalIncome;
+        totalExpensesValue.textContent = totalExpense;
+        totalSavingsValue.textContent = savings;
     }
     else {
-        table.innerHTML = "<div class='text-center'><h5>No Data Found</h5></div>";
+        totalDataContainer.style.display = 'none';
+        container.style.display = 'block';
     }
 }
 
@@ -206,14 +219,6 @@ async function displayDownloadUrl(data, table, tablebody) {
             tr.appendChild(td3);
             tablebody.appendChild(tr);
         }
-        let extraTr = document.createElement("tr");
-        let extraTd = document.createElement("td");
-        extraTd.textContent = 'new data will be added here';
-        extraTr.appendChild(extraTd);
-        tablebody.appendChild(extraTr);
-    }
-    else {
-        table.innerHTML = "<div class='text-center'><h5>No Data Found</h5></div>";
     }
 }
 

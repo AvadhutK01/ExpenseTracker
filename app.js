@@ -14,15 +14,11 @@ const forgetPasswordModel = require('./Models/forgetPasswordModel');
 const moneyData = require('./Models/moneyModel');
 const DurlDb = require('./Models/filesDownloadUrlModel');
 const yearlyReportDb = require('./Models/YearlyReportModel');
-//const { default: helmet } = require('helmet');
 const fs = require('fs');
 const compression = require('compression');
 const morgan = require('morgan');
 const app = express();
-// app.use(helmet());
-
 const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
-
 app.use(compression());
 app.use(morgan('combined', { stream: accessLogStream }))
 app.use(express.static(path.join(__dirname, 'public')));
@@ -43,6 +39,7 @@ userDb.hasMany(yearlyReportDb);
 yearlyReportDb.belongsTo(userDb);
 userDb.hasMany(DurlDb);
 DurlDb.belongsTo(userDb);
-sequelize.sync().then(() => app.listen(3000)).catch((err) => {
-    console.log(err)
-})
+const PORT = process.env.PORT || 3000;
+sequelize.sync().then(() => app.listen(PORT)).catch((err) => {
+    console.log(err);
+});
