@@ -3,6 +3,7 @@ const updateData1 = JSON.parse(localStorage.getItem('updateData'));
 const Amount = document.getElementById('Amount');
 const Desc = document.getElementById('Desc');
 const Type = document.getElementById('Type');
+const divAlert = document.getElementById('div-alert');
 if (updateData1) {
     if (updateData1.type === 'Expense') {
         let btnExpenseSubmit = document.getElementById('btnExpenseSubmit');
@@ -38,11 +39,12 @@ Dataform.addEventListener('submit', async function (e) {
                 }
             });
             const result = response.data;
-            alert(result.message);
+            await displayNotification(result.message, 'success', divAlert);
             localStorage.removeItem('updateData');
             window.location = '/expense/expenseMain';
         } catch (error) {
-            alert('Internal Server Error!');
+            console.log(error)
+            await displayNotification('Internal Server Error!', 'danger', divAlert)
         }
     } else {
         let btnExpenseSubmit = document.getElementById('btnExpenseSubmit');
@@ -75,11 +77,24 @@ async function addData(type) {
             }
         });
         const result = response.data;
-        alert(result.message);
+        await displayNotification(result.message, 'success', divAlert);
         window.location = '/expense/expenseMain';
     }
     catch (err) {
         console.error(err);
-        alert("Internal Server Error!");
+        await displayNotification("Internal Server Error!", 'danger', divAlert);
+
     }
+}
+function displayNotification(message, type, container) {
+    return new Promise((resolve) => {
+        const notificationDiv = document.createElement('div');
+        notificationDiv.className = `alert alert-${type}`;
+        notificationDiv.textContent = message;
+        container.appendChild(notificationDiv);
+        setTimeout(() => {
+            notificationDiv.remove();
+            resolve();
+        }, 2000);
+    });
 }

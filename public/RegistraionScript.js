@@ -1,3 +1,4 @@
+const divAlert = document.getElementById('div-alert');
 document.getElementById("registrationForm").addEventListener("submit", async function (event) {
     event.preventDefault();
 
@@ -24,18 +25,34 @@ document.getElementById("registrationForm").addEventListener("submit", async fun
 
             const data = response.data;
             if (data.message === "success") {
-                alert("Registration successful! You will be redirected to the login page now.");
+                await displayNotification("Registration successful!", 'success', divAlert);
                 window.location = '/user/login';
             }
         } catch (error) {
-            if (error.response.data.message === "exist") {
-                alert("User already exists! Check the credentials you have entered or click on login.");
-            } else {
-                alert(error.response.data.message);
+            if (error.response.data.message) {
+                if (error.response.data.message === "exist") {
+                    await displayNotification("User already exists! Check the credentials you have entered or click on login.", 'warning', divAlert);
+                } else {
+                    await displayNotification(error.response.data.message, 'danger', divAlert);
+                }
             }
-            console.error(error);
+            else {
+                await displayNotification("Internal Server Error!", 'danger', divAlert);
+            }
         }
     } else {
-        alert('Passwords do not match.');
+        await displayNotification('Passwords do not match.', 'warning', divAlert);
     }
 });
+function displayNotification(message, type, container) {
+    return new Promise((resolve) => {
+        const notificationDiv = document.createElement('div');
+        notificationDiv.className = `alert alert-${type}`;
+        notificationDiv.textContent = message;
+        container.appendChild(notificationDiv);
+        setTimeout(() => {
+            notificationDiv.remove();
+            resolve();
+        }, 2000);
+    });
+}

@@ -1,3 +1,4 @@
+const divAlert = document.getElementById('div-alert');
 let tabel = document.getElementById("table");
 let tabelbody = document.getElementById("tablebody");
 const PaginationDiv = document.getElementById('paginationDiv');
@@ -23,7 +24,7 @@ async function fetchData(rowsPerPage, page) {
         displayData(result.data.result)
         showPagination(result.data);
     } catch (error) {
-        alert('Internal Server Error!');
+        await displayNotification('Internal Server Error', 'danger', divAlert);
     }
 }
 
@@ -90,7 +91,7 @@ async function deleteData(id, Amount, Etype) {
             );
             window.location.href = '/expense/viewExpenses';
         } catch (error) {
-            alert('Internal Server Error');
+            await displayNotification('Internal Server Error', 'danger', divAlert);
         }
     }
 }
@@ -126,4 +127,17 @@ function showPagination({
         btn3.addEventListener('click', () => (fetchData(rowsPerPage, nextPage)));
         PaginationDiv.appendChild(btn3)
     }
+}
+
+function displayNotification(message, type, container) {
+    return new Promise((resolve) => {
+        const notificationDiv = document.createElement('div');
+        notificationDiv.className = `alert alert-${type}`;
+        notificationDiv.textContent = message;
+        container.appendChild(notificationDiv);
+        setTimeout(() => {
+            notificationDiv.remove();
+            resolve();
+        }, 2000);
+    });
 }

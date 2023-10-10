@@ -55,8 +55,9 @@ exports.addExpense = async (req, res) => {
             else {
                 await yearlyReportDb.create({ year: formattedDate, TotalExpense: Amount, userDatumId: id }, { transaction: t })
             }
-            await calculateAndUpdateSavings(id, formattedDate, t);
             await userDb.update({ date: date, totalExpense: totalExpense + Amount }, { where: { id: id }, transaction: t });
+            await calculateAndUpdateSavings(id, t);
+            await calculateAndUpdateYearlySavings(id, formattedDate, t);
         }
         else {
             if (Yearlyresult && Yearlyresult.length > 0) {
@@ -67,8 +68,9 @@ exports.addExpense = async (req, res) => {
             else {
                 await yearlyReportDb.create({ year: formattedDate, TotalIncomme: Amount, userDatumId: id }, { transaction: t })
             }
-            await calculateAndUpdateSavings(id, formattedDate, t);
             await userDb.update({ date: date, totalIncome: totalIncome + Amount }, { where: { id: id }, transaction: t });
+            await calculateAndUpdateSavings(id, t);
+            await calculateAndUpdateYearlySavings(id, formattedDate, t);
         }
 
         await t.commit();
@@ -152,18 +154,19 @@ exports.deleteExpenseData = async (req, res) => {
         const YearlytotalIncome = parseInt(yearlyResult.TotalIncomme);
         const savings = parseInt(yearlyResult.Savings);
 
-        const result = await userDb.findByPk(userid, { attributes: ['totalExpense', 'totalIncome'], transaction: t });
+        const result = await userDb.findByPk(userid, { attributes: ['totalExpense', 'totalIncome', 'Savings'], transaction: t });
         const totalExpense = parseInt(result.totalExpense);
         const totalIncome = parseInt(result.totalIncome);
+        const totalSavings = parseInt(result.Savings);
 
         await moneyData.destroy({ where: { id: id, userDatumId: userid }, transaction: t });
 
         if (Etype === 'Expense') {
             await yearlyReportDb.update({ TotalExpense: YearlytotalExpense - Amount, Savings: savings + Amount }, { where: { userDatumId: userid, year: formattedDate }, transaction: t });
-            await userDb.update({ date: date, totalExpense: totalExpense - Amount }, { where: { id: userid }, transaction: t });
+            await userDb.update({ date: date, totalExpense: totalExpense - Amount, Savings: totalSavings + Amount }, { where: { id: userid }, transaction: t });
         } else {
             await yearlyReportDb.update({ TotalIncomme: YearlytotalIncome - Amount, Savings: savings - Amount }, { where: { userDatumId: userid, year: formattedDate }, transaction: t });
-            await userDb.update({ date: date, totalIncome: totalIncome - Amount }, { where: { id: userid }, transaction: t });
+            await userDb.update({ date: date, totalIncome: totalIncome - Amount, Savings: totalSavings + Amount }, { where: { id: userid }, transaction: t });
         }
 
         await t.commit();
@@ -200,23 +203,24 @@ exports.updateExpense = async (req, res) => {
         await moneyDatavalue.save({ transaction: t });
 
 
-        const result = await userDb.findByPk(userid, { attributes: ['totalExpense', 'totalIncome'], transaction: t });
+        const result = await userDb.findByPk(userid, { attributes: ['totalExpense', 'totalIncome', 'Savings'], transaction: t });
         const totalExpense = parseInt(result.totalExpense);
         const totalIncome = parseInt(result.totalIncome);
+        const totalSavings = parseInt(result.Savings);
         const expenseAmountDifference = oldExpenseAmount - newExpenseAmount;
 
         const yearlyResult = await yearlyReportDb.findOne({ where: { userDatumId: userid, year: formattedDate }, transaction: t });
         const YearlytotalExpense = parseInt(yearlyResult.TotalExpense);
         const YearlytotalIncome = parseInt(yearlyResult.TotalIncomme);
-        const savings = parseInt(yearlyResult.Savings);
+        const Yearltysavings = parseInt(yearlyResult.Savings);
         const TotalexpenseAmountDifference = parseInt(oldExpenseAmount - newExpenseAmount);
 
         if (Etype == 'Expense') {
-            await yearlyReportDb.update({ TotalExpense: YearlytotalExpense - TotalexpenseAmountDifference, Savings: savings + TotalexpenseAmountDifference }, { where: { userDatumId: userid, year: formattedDate }, transaction: t });
-            await userDb.update({ date: date, totalExpense: totalExpense - expenseAmountDifference }, { where: { id: userid }, transaction: t });
+            await yearlyReportDb.update({ TotalExpense: YearlytotalExpense - TotalexpenseAmountDifference, Savings: Yearltysavings + TotalexpenseAmountDifference }, { where: { userDatumId: userid, year: formattedDate }, transaction: t });
+            await userDb.update({ date: date, totalExpense: totalExpense - expenseAmountDifference, Savings: totalSavings + TotalexpenseAmountDifference }, { where: { id: userid }, transaction: t });
         } else {
-            await yearlyReportDb.update({ TotalIncomme: YearlytotalIncome - TotalexpenseAmountDifference, Savings: savings - TotalexpenseAmountDifference }, { where: { userDatumId: userid, year: formattedDate }, transaction: t });
-            await userDb.update({ date: date, totalIncome: totalIncome - expenseAmountDifference }, { where: { id: userid }, transaction: t });
+            await yearlyReportDb.update({ TotalIncomme: YearlytotalIncome - TotalexpenseAmountDifference, Savings: Yearltysavings - TotalexpenseAmountDifference }, { where: { userDatumId: userid, year: formattedDate }, transaction: t });
+            await userDb.update({ date: date, totalIncome: totalIncome - expenseAmountDifference, Savings: totalSavings - TotalexpenseAmountDifference }, { where: { id: userid }, transaction: t });
         }
 
         await t.commit();
@@ -238,11 +242,11 @@ exports.getLeaderBoardData = async (req, res) => {
             attributes: [
                 'name',
                 'totalExpense',
-                'totalIncome'
+                'totalIncome',
+                'Savings'
             ],
             order: [
-                [sequelize.col('totalIncome'), 'DESC'],
-                [sequelize.col('totalExpense'), 'DESC']
+                [sequelize.col('Savings'), 'DESC']
             ]
         });
         res.status(200).json(LeaderBoardData);
@@ -356,7 +360,7 @@ module.exports.viewReportExpensesData = async (req, res) => {
     }
 }
 
-async function calculateAndUpdateSavings(id, formattedDate, t) {
+async function calculateAndUpdateYearlySavings(id, formattedDate, t) {
     try {
         const yearlyResult = await yearlyReportDb.findOne({ where: { userDatumId: id, year: formattedDate }, transaction: t });
         if (yearlyResult) {
@@ -364,13 +368,27 @@ async function calculateAndUpdateSavings(id, formattedDate, t) {
             const totalIncome = parseInt(yearlyResult.TotalIncomme);
             const savings = parseInt(totalIncome - totalExpense);
             await yearlyReportDb.update({ Savings: savings }, { where: { userDatumId: id, year: formattedDate }, transaction: t });
-            await t.commit()
             return savings;
         }
         return 0;
     } catch (error) {
         console.log(error);
-        await t.rollback();
+        return 0;
+    }
+}
+async function calculateAndUpdateSavings(id, t) {
+    try {
+        const Result = await userDb.findOne({ where: { id: id }, transaction: t });
+        if (Result) {
+            const totalExpense = parseInt(Result.totalExpense);
+            const totalIncome = parseInt(Result.totalIncome);
+            const savings = parseInt(totalIncome - totalExpense);
+            await userDb.update({ Savings: savings }, { where: { id: id }, transaction: t });
+            return savings;
+        }
+        return 0;
+    } catch (error) {
+        console.log(error);
         return 0;
     }
 }

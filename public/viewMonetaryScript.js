@@ -1,4 +1,4 @@
-
+const divAlert = document.getElementById('div-alert');
 let table1 = document.getElementById("table1");
 let tablebody1 = document.getElementById("tablebody1");
 let table2 = document.getElementById("table2");
@@ -18,64 +18,69 @@ const btnDownload = document.getElementById('btnDownload');
 document.addEventListener('DOMContentLoaded', fetchData);
 
 async function fetchData() {
-    const token = localStorage.getItem('token');
-    const result = await axios.get('/expense/viewReportExpensesData', {
-        headers: {
-            "Authorization": token
-        }
-    });
-    const yearlyResult = await axios.get('/expense/viewYearlyExpensesData', {
-        headers: {
-            "Authorization": token
-        }
-    });
-    const DownloadUrl = await axios.get('/expense/getDownloadUrl', {
-        headers: {
-            "Authorization": token
-        }
-    });
+    try {
+        const token = localStorage.getItem('token');
+        const result = await axios.get('/expense/viewReportExpensesData', {
+            headers: {
+                "Authorization": token
+            }
+        });
+        const yearlyResult = await axios.get('/expense/viewYearlyExpensesData', {
+            headers: {
+                "Authorization": token
+            }
+        });
+        const DownloadUrl = await axios.get('/expense/getDownloadUrl', {
+            headers: {
+                "Authorization": token
+            }
+        });
 
-    const currentDate = new Date();
-    const formattedDate = currentDate.toLocaleDateString('en-US');
-    const [month, day, year] = formattedDate.split('/');
-    const today = new Date(`${year}/${month}/${day}`);
+        const currentDate = new Date();
+        const formattedDate = currentDate.toLocaleDateString('en-US');
+        const [month, day, year] = formattedDate.split('/');
+        const today = new Date(`${year}/${month}/${day}`);
 
-    const startOfWeek = new Date(currentDate);
-    const dayOfWeek = currentDate.getDay();
-    const diff = currentDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-    startOfWeek.setDate(diff);
-    const startOfWeekFormatted = new Date(`${startOfWeek.getFullYear()}/${startOfWeek.getMonth()}/${startOfWeek.getDate()}`)
-    const thisMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        const startOfWeek = new Date(currentDate);
+        const dayOfWeek = currentDate.getDay();
+        const diff = currentDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+        startOfWeek.setDate(diff);
+        const startOfWeekFormatted = new Date(`${startOfWeek.getFullYear()}/${startOfWeek.getMonth()}/${startOfWeek.getDate()}`)
+        const thisMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
 
-    const dailyData = result.data.filter(item => {
-        const [itemDay, itemMonth, itemYear] = item.date.split('/');
-        const itemDate = new Date(`${itemYear}/${itemMonth}/${itemDay}`);
-        return itemDate.toDateString() === today.toDateString();
-    });
+        const dailyData = result.data.filter(item => {
+            const [itemDay, itemMonth, itemYear] = item.date.split('/');
+            const itemDate = new Date(`${itemYear}/${itemMonth}/${itemDay}`);
+            return itemDate.toDateString() === today.toDateString();
+        });
 
-    const weeklyData = result.data.filter(item => {
-        const [itemDay, itemMonth, itemYear] = item.date.split('/');
-        const itemDate = new Date(`${itemYear}/${itemMonth}/${itemDay}`);
-        return itemDate >= startOfWeekFormatted;
-    });
+        const weeklyData = result.data.filter(item => {
+            const [itemDay, itemMonth, itemYear] = item.date.split('/');
+            const itemDate = new Date(`${itemYear}/${itemMonth}/${itemDay}`);
+            return itemDate >= startOfWeekFormatted;
+        });
 
-    const monthlyData = result.data.filter(item => {
-        const [itemDay, itemMonth, itemYear] = item.date.split('/');
-        const itemDate = new Date(`${itemYear}/${itemMonth}/${itemDay}`);
-        return itemDate >= thisMonthStart;
-    });
+        const monthlyData = result.data.filter(item => {
+            const [itemDay, itemMonth, itemYear] = item.date.split('/');
+            const itemDate = new Date(`${itemYear}/${itemMonth}/${itemDay}`);
+            return itemDate >= thisMonthStart;
+        });
 
-    const currentYear = new Date().getFullYear();
-    const yearlyData = yearlyResult.data.filter(item => {
-        const [itemMonth, itemYear] = item.year.split('-').map(Number);
-        return itemYear === currentYear;
-    });
+        const currentYear = new Date().getFullYear();
+        const yearlyData = yearlyResult.data.filter(item => {
+            const [itemMonth, itemYear] = item.year.split('-').map(Number);
+            return itemYear === currentYear;
+        });
 
-    displayData(dailyData, table1, tablebody1, dailyDataArray);
-    displayData(weeklyData, table2, tablebody2, weeklyDataArray);
-    displayData(monthlyData, table3, tablebody3, monthlyDataArray);
-    displayYearlyReport(yearlyData, table4, tablebody4, yearlyDataArray);
-    displayDownloadUrl(DownloadUrl.data, table5, tablebody5);
+        displayData(dailyData, table1, tablebody1, dailyDataArray);
+        displayData(weeklyData, table2, tablebody2, weeklyDataArray);
+        displayData(monthlyData, table3, tablebody3, monthlyDataArray);
+        displayYearlyReport(yearlyData, table4, tablebody4, yearlyDataArray);
+        displayDownloadUrl(DownloadUrl.data, table5, tablebody5);
+
+    } catch (error) {
+        await displayNotification("Internal Server Error!", 'danger', divAlert);
+    }
 
 }
 
@@ -224,6 +229,10 @@ btnDownload.addEventListener('click', (e) => {
         downloadData('Report');
         $('#downloadModal').modal('hide');
     });
+    const modalCloseButton = document.querySelector('[data-bs-dismiss="modal"]');
+    modalCloseButton.addEventListener('click', () => {
+        $('#downloadModal').modal('hide');
+    });
 });
 
 
@@ -252,11 +261,21 @@ async function downloadData(type) {
         a.click();
         setTimeout(function () {
             window.location.reload();
-        }, 2000);
+        }, 3000);
     } catch (error) {
-        console.log(error);
-        alert('something went wrong');
+        await displayNotification("Internal Server Error!", 'danger', divAlert);
     }
 }
 
-
+function displayNotification(message, type, container) {
+    return new Promise((resolve) => {
+        const notificationDiv = document.createElement('div');
+        notificationDiv.className = `alert alert-${type}`;
+        notificationDiv.textContent = message;
+        container.appendChild(notificationDiv);
+        setTimeout(() => {
+            notificationDiv.remove();
+            resolve();
+        }, 2000);
+    });
+}
