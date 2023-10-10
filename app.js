@@ -1,5 +1,6 @@
 const bodyParser = require('body-parser');
 const express = require('express');
+require('dotenv').config();
 const cors = require('cors');
 const router = require('./Routers/routes');
 const path = require('path');
@@ -8,7 +9,6 @@ const sequelize = require('./dbConnection');
 const expenseRoutes = require('./Routers/expenseRoutes');
 const userDb = require('./Models/userModel');
 const payRoute = require('./Routers/paymentRoutes');
-require('dotenv').config();
 const OrderData = require('./Models/paymentModel');
 const forgetPasswordModel = require('./Models/forgetPasswordModel');
 const moneyData = require('./Models/moneyModel');
