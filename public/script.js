@@ -17,6 +17,11 @@ LeaderBoardbtn.type = 'button';
 LeaderBoardbtn.className = "btn btn-primary ms-2";
 LeaderBoardbtn.id = "btnPremumSubmit";
 LeaderBoardbtn.textContent = 'View LeaderBoard';
+const ViewGraphbtn = document.createElement('button');
+ViewGraphbtn.type = 'button';
+ViewGraphbtn.className = "btn btn-primary ms-2";
+ViewGraphbtn.id = "ViewGraphbtn";
+ViewGraphbtn.textContent = 'View Graph';
 if (nav) {
 
     fetch('/HeaderBeforeLogin.html')
@@ -52,6 +57,7 @@ if (PremiumDiv) {
             else if (response.data.result === "true") {
                 PremiumDiv.appendChild(LeaderBoardbtn);
                 PremiumDiv.appendChild(Monetarybtn);
+                PremiumDiv.appendChild(ViewGraphbtn);
             }
         } catch (error) {
             await displayNotification("Internal Server Error!", 'danger', divNewAlert);
@@ -108,6 +114,10 @@ LeaderBoardbtn.addEventListener('click', () => {
 
 Monetarybtn.addEventListener('click', () => {
     window.location.href = '/expense/viewMonetaryData';
+});
+
+ViewGraphbtn.addEventListener('click', () => {
+    window.location.href = '/expense/viewExpenseGraph';
 });
 
 function displayNotification(message, type, container) {

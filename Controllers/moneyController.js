@@ -360,6 +360,10 @@ module.exports.viewReportExpensesData = async (req, res) => {
     }
 }
 
+module.exports.getExpenseGraph = async (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'Views', 'GraphView.html'))
+}
+
 async function calculateAndUpdateYearlySavings(id, formattedDate, t) {
     try {
         const yearlyResult = await yearlyReportDb.findOne({ where: { userDatumId: id, year: formattedDate }, transaction: t });
