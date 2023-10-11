@@ -14,11 +14,11 @@ const forgetPasswordModel = require('./Models/forgetPasswordModel');
 const moneyData = require('./Models/moneyModel');
 const DurlDb = require('./Models/filesDownloadUrlModel');
 const yearlyReportDb = require('./Models/YearlyReportModel');
-const fs = require('fs');
+const fst = require('fs');
 const compression = require('compression');
 const morgan = require('morgan');
 const app = express();
-const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
+const accessLogStream = fst.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
 app.use(compression());
 app.use(morgan('combined', { stream: accessLogStream }))
 app.use(express.static(path.join(__dirname, '..', 'Frontend', 'public')));
