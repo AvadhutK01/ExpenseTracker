@@ -101,7 +101,7 @@ exports.SendforgetPasswordLink = async (req, res) => {
                 sender,
                 to: receivers,
                 subject: "Reset Password",
-                textContent: `click on given one time link to reset the password:  http://ec2-51-20-113-117.eu-north-1.compute.amazonaws.com/user/forgetPassword/${id}`
+                textContent: `click on given one time link to reset the password:  ${process.env.FORGET_LINK}/user/forgetPassword/${id}`
             }).then(() => {
                 res.status(202).json({ message: 'success' });
             });
