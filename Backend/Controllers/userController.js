@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const sequelize = require('../dbConnection');
 var SibApiV3Sdk = require('sib-api-v3-sdk');
 const { v4: uuidv4 } = require('uuid');
+const moment = require('moment');
 const forgetPasswordModel = require('../Models/forgetPasswordModel');
 
 exports.getRegistrationPage = (req, res) => {
@@ -21,7 +22,7 @@ exports.postRegistrationData = async (req, res) => {
     const phoneNo = body.phoneInput;
     const email = body.emailInput;
     const passwordInput = body.passwordInput;
-    const date = formatDate(new Date().toLocaleDateString());
+    const date = formatDate(moment().format('L'));
     const t = await sequelize.transaction();
     try {
         const passWord = await bcrypt.hash(passwordInput, 10);
@@ -162,8 +163,6 @@ function generateAccessToken(id) {
 }
 
 function formatDate(currentDate) {
-    const [month, day, year] = currentDate.split('/');
-    const formattedDate = `${day}/${month}/${year}`;
-
+    const formattedDate = moment(currentDate, 'MM/DD/YYYY').format('DD/MM/YYYY');
     return formattedDate;
 }

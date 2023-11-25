@@ -6,6 +6,7 @@ const XLSX = require('xlsx');
 const { uploadToS3 } = require('../services/S3Services');
 const DurlDb = require('../Models/filesDownloadUrlModel');
 const yearlyReportDb = require('../Models/YearlyReportModel');
+const moment = require('moment');
 exports.getExpenseMainHomePage = (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'Frontend', "Views", "mainHome.html"));
 };
@@ -22,11 +23,8 @@ exports.addExpense = async (req, res) => {
     const description = body.Desc;
     const sourceType = body.Type;
     const Etype = body.Etype;
-    const date = formatDate(new Date().toLocaleDateString());
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1;
-    const currentYear = currentDate.getFullYear();
-    const formattedDate = `${currentMonth.toString().padStart(2, '0')}-${currentYear}`;
+    const date = formatDate(moment().format('L'));
+    const formattedDate = moment().format('MM-YYYY');
     try {
         const result = await userDb.findByPk(id, { attributes: ['totalExpense', 'totalIncome'], transaction: t });
         const Yearlyresult = await yearlyReportDb.findAll({ where: { userDatumId: id, year: formattedDate.toString() }, attributes: ['TotalExpense', 'TotalIncomme', 'year'], transaction: t });
@@ -133,7 +131,7 @@ exports.getDownloadUrl = async (req, res) => {
 
 exports.deleteExpenseData = async (req, res) => {
     const t = await sequelize.transaction();
-    const date = formatDate(new Date().toLocaleDateString());
+    const date = formatDate(moment().format('L'));
     try {
         const id = req.body.id;
         const userid = req.user.id;
@@ -180,7 +178,7 @@ exports.deleteExpenseData = async (req, res) => {
 
 exports.updateExpense = async (req, res) => {
     const t = await sequelize.transaction();
-    const date = formatDate(new Date().toLocaleDateString());
+    const date = formatDate(moment().format('L'));
     try {
         const body = req.body;
         const id = body.id;
@@ -263,7 +261,7 @@ exports.getViewMonetaryPage = (req, res) => {
 exports.downloadExpense = async (req, res) => {
     const t = await sequelize.transaction();
     const userId = req.user.id;
-    const date = new Date().toLocaleString().replace(/\//g, '-');
+    const date = moment().format('L').replace(/\//g, '-');
     const downloadType = req.body.downloadType;
     let buffer;
     let fileName;
@@ -398,7 +396,6 @@ async function calculateAndUpdateSavings(id, t) {
 }
 
 function formatDate(currentDate) {
-    const [month, day, year] = currentDate.split('/');
-    const formattedDate = `${day}/${month}/${year}`;
+    const formattedDate = moment(currentDate, 'MM/DD/YYYY').format('DD/MM/YYYY');
     return formattedDate;
 }

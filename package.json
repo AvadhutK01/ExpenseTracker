@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "scripts": {
+    "start": "cd Backend && nodemon app.js"
+  }
+}

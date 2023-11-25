@@ -40,6 +40,6 @@ yearlyReportDb.belongsTo(userDb);
 userDb.hasMany(DurlDb);
 DurlDb.belongsTo(userDb);
 const PORT = process.env.PORT || 3000;
-sequelize.sync().then(() => app.listen(PORT)).catch((err) => {
+sequelize.sync({ force: false }).then(() => app.listen(PORT)).catch((err) => {
     console.log(err);
 });
