@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const cookie = require("cookie");
 const userDb = require("../Models/userModel");
 
+//Authenticating user with jwt token and checking if user exists in database and passing it to request
 const authenticateUser = async (req, res, next) => {
     try {
         const cookies = cookie.parse(req.headers.cookie || ''); // Parse cookies from the request headers

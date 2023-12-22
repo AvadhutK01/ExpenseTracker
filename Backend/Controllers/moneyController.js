@@ -7,14 +7,18 @@ const { uploadToS3 } = require('../services/S3Services');
 const DurlDb = require('../Models/filesDownloadUrlModel');
 const yearlyReportDb = require('../Models/YearlyReportModel');
 const moment = require('moment');
+
+// Getting mainHome page
 exports.getExpenseMainHomePage = (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'Frontend', "Views", "mainHome.html"));
 };
 
+// Getting expenseMain page
 exports.getExpenseMainPage = (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'Frontend', 'Views', "expenseMain.html"));
 };
 
+//Adding new expense
 exports.addExpense = async (req, res) => {
     const t = await sequelize.transaction();
     const body = req.body;
@@ -80,10 +84,12 @@ exports.addExpense = async (req, res) => {
     }
 };
 
+//Getting viewExpenses page
 exports.getExpensesViewPage = (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'Frontend', 'Views', "viewExpenses.html"));
 };
 
+//Getting all expenses data with pagination
 exports.getExpensesData = async (req, res) => {
     const limit = +req.query.rows || 5;
     let totalItems;
@@ -107,6 +113,7 @@ exports.getExpensesData = async (req, res) => {
     }
 };
 
+//Getting yearly Reports
 exports.getYearlyExpensesData = async (req, res) => {
     try {
         const id = req.user.id;
@@ -118,6 +125,7 @@ exports.getYearlyExpensesData = async (req, res) => {
     }
 }
 
+// Getting stored download url
 exports.getDownloadUrl = async (req, res) => {
     try {
         const id = req.user.id;
@@ -129,6 +137,7 @@ exports.getDownloadUrl = async (req, res) => {
     }
 }
 
+//Deleting Expenese data
 exports.deleteExpenseData = async (req, res) => {
     const t = await sequelize.transaction();
     const date = formatDate(moment().format('L'));
@@ -176,6 +185,7 @@ exports.deleteExpenseData = async (req, res) => {
     }
 };
 
+//Updating Expense Data
 exports.updateExpense = async (req, res) => {
     const t = await sequelize.transaction();
     const date = formatDate(moment().format('L'));
@@ -230,10 +240,12 @@ exports.updateExpense = async (req, res) => {
     }
 };
 
+//Getting leaderboard page
 exports.getLeaderBoardPage = (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'Frontend', "Views", "expenseLeaderBoard.html"));
 };
 
+//Getting Leaderboard Data
 exports.getLeaderBoardData = async (req, res) => {
     try {
         const LeaderBoardData = await userDb.findAll({
@@ -254,10 +266,12 @@ exports.getLeaderBoardData = async (req, res) => {
     }
 };
 
+//getting monetary page (Reports)
 exports.getViewMonetaryPage = (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'Frontend', "Views", "viewMonetaryData.html"));
 }
 
+//Converting reports to Excelsheet and uploading to aws s3 and storing object url to database
 exports.downloadExpense = async (req, res) => {
     const t = await sequelize.transaction();
     const userId = req.user.id;
@@ -347,6 +361,7 @@ exports.downloadExpense = async (req, res) => {
     }
 }
 
+//Getting expense report data
 module.exports.viewReportExpensesData = async (req, res) => {
     try {
         const id = req.user.id;
@@ -358,6 +373,7 @@ module.exports.viewReportExpensesData = async (req, res) => {
     }
 }
 
+// Getting all savings of user
 module.exports.getSavingsData = async (req, res) => {
     try {
         const id = req.user.id;
@@ -369,10 +385,16 @@ module.exports.getSavingsData = async (req, res) => {
     }
 }
 
+
+//Rendering GraphView page
 module.exports.getExpenseGraph = async (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'Frontend', 'Views', 'GraphView.html'))
 }
 
+
+//Helper functions
+
+// Function to calculate yearly savings and updating it in database
 async function calculateAndUpdateYearlySavings(id, formattedDate, t) {
     try {
         const yearlyResult = await yearlyReportDb.findOne({ where: { userDatumId: id, year: formattedDate }, transaction: t });
@@ -389,6 +411,8 @@ async function calculateAndUpdateYearlySavings(id, formattedDate, t) {
         return 0;
     }
 }
+
+// Function to calculate total savings and updating it in database
 async function calculateAndUpdateSavings(id, t) {
     try {
         const Result = await userDb.findOne({ where: { id: id }, transaction: t });
@@ -406,6 +430,7 @@ async function calculateAndUpdateSavings(id, t) {
     }
 }
 
+//Function to format date to specific format
 function formatDate(currentDate) {
     const formattedDate = moment(currentDate, 'MM/DD/YYYY').format('DD/MM/YYYY');
     return formattedDate;

@@ -8,14 +8,17 @@ const { v4: uuidv4 } = require('uuid');
 const moment = require('moment');
 const forgetPasswordModel = require('../Models/forgetPasswordModel');
 
+//Rendering Registration page
 exports.getRegistrationPage = (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'Frontend', "Views", "RegistrationPage.html"));
 };
 
+//Rendering Login page
 exports.getLoginPage = (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'Frontend', "Views", "LoginPage.html"));
 };
 
+//Adding new user
 exports.postRegistrationData = async (req, res) => {
     const body = req.body;
     const name = body.nameInput;
@@ -47,6 +50,7 @@ exports.postRegistrationData = async (req, res) => {
     }
 };
 
+//Checking user login and generating access token
 exports.checkLogin = async (req, res) => {
     const body = req.body;
     const email = body.email;
@@ -81,6 +85,7 @@ exports.checkLogin = async (req, res) => {
     }
 };
 
+//Generating forget password link and sending it to user's email address
 exports.SendforgetPasswordLink = async (req, res) => {
     try {
         const email = req.body.emailId;
@@ -115,6 +120,7 @@ exports.SendforgetPasswordLink = async (req, res) => {
     }
 };
 
+//Verifying link and Rendering forget password page 
 exports.getForgetPasswordPage = async (req, res) => {
     try {
         const id = req.params.id;
@@ -139,6 +145,7 @@ exports.getForgetPasswordPage = async (req, res) => {
     }
 };
 
+// Updating user's password
 exports.updatePasswordData = async (req, res) => {
     const id = req.body.id;
     const password = req.body.password;
@@ -158,10 +165,14 @@ exports.updatePasswordData = async (req, res) => {
     }
 };
 
+//Helper functions
+
+// Function to generate Access Token
 function generateAccessToken(id) {
     return jwt.sign({ userid: id }, process.env.SECRETKEY);
 }
 
+// Function to format date to spacific formmat
 function formatDate(currentDate) {
     const formattedDate = moment(currentDate, 'MM/DD/YYYY').format('DD/MM/YYYY');
     return formattedDate;
