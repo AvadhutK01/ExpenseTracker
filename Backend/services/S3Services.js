@@ -6,6 +6,7 @@ module.exports.uploadToS3 = async function (BucketName, data, fileName) {
     const s3bucket = new AWS.S3({
         accessKeyId: IAM_USER_KEY,
         secretAccessKey: IAM_USER_SECRET,
+        region: 'eu-north-1'
     });
 
     const params = {

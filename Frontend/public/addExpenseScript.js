@@ -29,13 +29,11 @@ Dataform.addEventListener('submit', async function (e) {
                 Desc: Desc.value,
                 Type: Type.value,
             };
-            const token = localStorage.getItem('token');
             const id = updateData1.id;
             const Etype = updateData1.type
             let response = await axios.post('/expense/update-expense', { Etype, id, data }, {
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": token
+                    "Content-Type": "application/json"
                 }
             });
             const result = response.data;
@@ -69,11 +67,9 @@ async function addData(type) {
             Type: Type.value,
             Etype: type
         };
-        const token = localStorage.getItem('token');
         let response = await axios.post('/expense/post-expense', data, {
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": token
             }
         });
         const result = response.data;

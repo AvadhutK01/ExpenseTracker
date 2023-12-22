@@ -4,24 +4,43 @@ const navbar = document.getElementById('navbar');
 const PremiumDiv = document.querySelector('#PremiumDiv');
 const Premiumbtn = document.createElement('button');
 Premiumbtn.type = 'button';
-Premiumbtn.className = "btn btn-primary ms-2 mt-2";
+Premiumbtn.className = "btn btn-primary ms-2";
 Premiumbtn.id = "btnPremumSubmit";
 Premiumbtn.textContent = 'Buy Premium Membership';
 const Monetarybtn = document.createElement('button');
 Monetarybtn.type = 'button';
-Monetarybtn.className = "btn btn-primary ms-2 mt-2";
+Monetarybtn.className = "btn btn-primary ms-2 ";
 Monetarybtn.id = "Monetarybtn";
 Monetarybtn.textContent = 'View Reports';
 const LeaderBoardbtn = document.createElement('button');
 LeaderBoardbtn.type = 'button';
-LeaderBoardbtn.className = "btn btn-primary ms-2 mt-2";
+LeaderBoardbtn.className = "btn btn-primary ms-2 ";
 LeaderBoardbtn.id = "btnPremumSubmit";
 LeaderBoardbtn.textContent = 'View LeaderBoard';
 const ViewGraphbtn = document.createElement('button');
 ViewGraphbtn.type = 'button';
-ViewGraphbtn.className = "btn btn-primary ms-2 mt-2";
+ViewGraphbtn.className = "btn btn-primary ms-2";
 ViewGraphbtn.id = "ViewGraphbtn";
 ViewGraphbtn.textContent = 'View Graph';
+
+function addClassIfWidthBelow991px(element) {
+    if (window.innerWidth <= 991) {
+        element.classList.add('mb-2');
+    }
+}
+
+addClassIfWidthBelow991px(Premiumbtn);
+addClassIfWidthBelow991px(Monetarybtn);
+addClassIfWidthBelow991px(LeaderBoardbtn);
+addClassIfWidthBelow991px(ViewGraphbtn);
+
+window.addEventListener('resize', () => {
+    addClassIfWidthBelow991px(Premiumbtn);
+    addClassIfWidthBelow991px(Monetarybtn);
+    addClassIfWidthBelow991px(LeaderBoardbtn);
+    addClassIfWidthBelow991px(ViewGraphbtn);
+});
+
 if (nav) {
 
     fetch('/HeaderBeforeLogin.html')
@@ -45,19 +64,18 @@ if (nav) {
 if (PremiumDiv) {
     document.addEventListener('DOMContentLoaded', async () => {
         try {
-            const token = localStorage.getItem('token');
-            const response = await axios.get('/payment/checkPremium', {
-                headers: {
-                    "Authorization": token
-                }
-            });
+            const response = await axios.get('/payment/checkPremium');
             if (response.data.result === "false") {
                 PremiumDiv.appendChild(Premiumbtn);
+                addClassIfWidthBelow991px(Premiumbtn);
             }
             else if (response.data.result === "true") {
                 PremiumDiv.appendChild(LeaderBoardbtn);
                 PremiumDiv.appendChild(Monetarybtn);
                 PremiumDiv.appendChild(ViewGraphbtn);
+                addClassIfWidthBelow991px(LeaderBoardbtn);
+                addClassIfWidthBelow991px(Monetarybtn);
+                addClassIfWidthBelow991px(ViewGraphbtn);
             }
         } catch (error) {
             await displayNotification("Internal Server Error!", 'danger', divNewAlert);
@@ -67,12 +85,7 @@ if (PremiumDiv) {
 Premiumbtn.addEventListener('click', async (e) => {
 
     try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('/payment/premiummember', {
-            headers: {
-                "Authorization": token
-            }
-        });
+        const response = await axios.get('/payment/premiummember');
         const options = {
             "key": response.data.key_id,
             "order_id": response.data.result.id,
@@ -80,7 +93,7 @@ Premiumbtn.addEventListener('click', async (e) => {
                 let result = await axios.post('/payment/updateTransacation', {
                     order_id: options.order_id,
                     payment_id: response.razorpay_payment_id
-                }, { headers: { "Authorization": token } })
+                })
                 await displayNotification('You are Premium Member now!', 'success', divNewAlert);
                 window.location.reload();
             }
@@ -90,7 +103,7 @@ Premiumbtn.addEventListener('click', async (e) => {
 
         e.preventDefault();
         rzpl.on('payment.failed', async () => {
-            await axios.post('/payment/updateTransacation', { order_id: response.data.result.id, payment_id: null }, { headers: { "Authorization": token } });
+            await axios.post('/payment/updateTransacation', { order_id: response.data.result.id, payment_id: null });
         })
     } catch (error) {
         if (error.response.status) {
@@ -131,4 +144,8 @@ function displayNotification(message, type, container) {
             resolve();
         }, 2000);
     });
+}
+function signOut() {
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    window.location.href = '/';
 }

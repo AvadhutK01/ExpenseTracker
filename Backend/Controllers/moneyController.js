@@ -358,6 +358,17 @@ module.exports.viewReportExpensesData = async (req, res) => {
     }
 }
 
+module.exports.getSavingsData = async (req, res) => {
+    try {
+        const id = req.user.id;
+        const result = await yearlyReportDb.findAll({ where: { userDatumId: id } });
+        res.status(200).json(result);
+    } catch (err) {
+        res.status(500).json({ message: 'Internal Server Error' });
+        console.log(err);
+    }
+}
+
 module.exports.getExpenseGraph = async (req, res) => {
     res.sendFile(path.join(__dirname, '..', '..', 'Frontend', 'Views', 'GraphView.html'))
 }

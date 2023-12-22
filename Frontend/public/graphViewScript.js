@@ -3,29 +3,45 @@ const GraphDiv = document.getElementById('GraphDiv');
 const HeadingDiv = document.getElementById('HeadingDiv');
 const btnShowExpenseGraph = document.getElementById('btnShowExpenseGraph');
 const btnShowIncomeGraph = document.getElementById('btnShowIncomeGraph');
+const btnShowSavingsGriph = document.getElementById('btnShowSavingsGriph');
+
 document.addEventListener('DOMContentLoaded', fetchData('Expense'));
 async function fetchData(Type) {
-    try {
-        const token = localStorage.getItem('token');
-        const result = await axios.get('/expense/viewReportExpensesData', {
-            headers: {
-                "Authorization": token
-            }
-        });
-        const thisMonthStart = moment().startOf('month');
+    if (Type == 'Savings') {
+        try {
+            const result = await axios.get('/expense/getSavingsData');
 
-        const monthlyData = result.data.filter(item => {
-            const itemDate = moment(item.date, 'DD/MM/YYYY');
-            return itemDate.isSameOrAfter(thisMonthStart, 'day');
-        });
+            const currentYear = new Date().getFullYear().toString();
+            const monthlyData = result.data.filter(item => {
+                const [month, year] = item.year.split('-');
+                return year === currentYear;
+            });
 
-        const resultArray = formatData(monthlyData, Type)
-        displayGraph(resultArray, Type);
+            const resultArray = formatSavingsData(monthlyData);
+            console.log(resultArray);
+            displayGraph(resultArray, Type);
 
-    } catch (error) {
-        await displayNotification("Internal Server Error!", 'danger', divAlert);
+        } catch (error) {
+            console.log(error);
+        }
     }
+    else {
+        try {
+            const result = await axios.get('/expense/viewReportExpensesData');
+            const thisMonthStart = moment().startOf('month');
 
+            const monthlyData = result.data.filter(item => {
+                const itemDate = moment(item.date, 'DD/MM/YYYY');
+                return itemDate.isSameOrAfter(thisMonthStart, 'day');
+            });
+
+            const resultArray = formatData(monthlyData, Type)
+            displayGraph(resultArray, Type);
+
+        } catch (error) {
+            await displayNotification("Internal Server Error!", 'danger', divAlert);
+        }
+    }
 }
 
 function formatData(data, Type) {
@@ -48,7 +64,13 @@ function formatData(data, Type) {
     });
     return resultArray
 }
-
+function formatSavingsData(data) {
+    const resultArray = data.map(item => ({
+        month: moment(item.year, 'MM-YYYY').format('MMMM'),
+        savings: parseInt(item.Savings),
+    }));
+    return resultArray;
+}
 
 if (btnShowExpenseGraph) {
     btnShowExpenseGraph.addEventListener("click", function () {
@@ -61,16 +83,30 @@ if (btnShowIncomeGraph) {
         fetchData("Income");
     });
 }
+if (btnShowSavingsGriph) {
+    btnShowSavingsGriph.addEventListener('click', function () {
+        fetchData('Savings');
+    });
+}
 
 function displayGraph(data, type) {
-    const labels = data.map(item => item.sourceType);
-    const amounts = data.map(item => parseInt(item.Amount));
-
+    let labels;
+    let amounts;
+    let notation = '';
+    if (type == 'Savings') {
+        labels = data.map(item => item.month);
+        amounts = data.map(item => item.savings);
+        notation = 'Year'
+    } else {
+        labels = data.map(item => item.sourceType);
+        amounts = data.map(item => parseInt(item.Amount));
+        notation = 'Month'
+    }
     const ctx = document.createElement('canvas');
     HeadingDiv.innerHTML = '';
     GraphDiv.innerHTML = '';
-    HeadingDiv.className = 'text-center mt-5 mb-3'
-    HeadingDiv.innerHTML = `<h5>${type} Graph of Current Month</h5>`;
+    HeadingDiv.className = 'text-center mt-5 mb-3';
+    HeadingDiv.innerHTML = `<h5>${type} Graph of Current ${notation}</h5>`;
     GraphDiv.appendChild(ctx);
 
     new Chart(ctx, {

@@ -1,15 +1,31 @@
 const jwt = require("jsonwebtoken");
+const cookie = require("cookie");
 const userDb = require("../Models/userModel");
-const authnticateUser = async (req, res, next) => {
+
+const authenticateUser = async (req, res, next) => {
     try {
-        const token = req.header('Authorization');
+        const cookies = cookie.parse(req.headers.cookie || ''); // Parse cookies from the request headers
+
+        const token = cookies.token; // Get the token from the "token" cookie
+        console.log(token);
+
+        if (!token) {
+            return res.redirect('/');
+        }
+
         const user = jwt.verify(token, process.env.SECRETKEY);
         const result = await userDb.findByPk(user.userid);
+
+        if (!result) {
+            return res.status(401).json({ data: 'failed' });
+        }
+
         req.user = result;
         next();
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(401).json({ data: 'failed' });
     }
-}
-module.exports = authnticateUser;
+};
+
+module.exports = authenticateUser;

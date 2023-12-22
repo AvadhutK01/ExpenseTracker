@@ -15,12 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 async function fetchData(rowsPerPage, page) {
     try {
-        const token = localStorage.getItem('token');
-        const result = await axios.get(`/expense/viewExpensesData?page=${page}&rows=${rowsPerPage}`, {
-            headers: {
-                "Authorization": token
-            }
-        });
+        const result = await axios.get(`/expense/viewExpensesData?page=${page}&rows=${rowsPerPage}`);
         displayData(result.data.result)
         showPagination(result.data);
     } catch (error) {
@@ -77,17 +72,11 @@ async function displayData(data) {
 }
 
 async function deleteData(id, Amount, Etype) {
-    const token = localStorage.getItem('token');
     const isConfirmed = confirm('Are you sure you want to delete this data?');
     if (isConfirmed) {
         try {
             await axios.post(`/expense/deleteExpensedata`,
-                { id, Amount, Etype },
-                {
-                    headers: {
-                        "Authorization": token
-                    }
-                }
+                { id, Amount, Etype }
             );
             window.location.href = '/expense/viewExpenses';
         } catch (error) {

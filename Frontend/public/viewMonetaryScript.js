@@ -24,22 +24,9 @@ document.addEventListener('DOMContentLoaded', fetchData);
 
 async function fetchData() {
     try {
-        const token = localStorage.getItem('token');
-        const result = await axios.get('/expense/viewReportExpensesData', {
-            headers: {
-                "Authorization": token
-            }
-        });
-        const yearlyResult = await axios.get('/expense/viewYearlyExpensesData', {
-            headers: {
-                "Authorization": token
-            }
-        });
-        const DownloadUrl = await axios.get('/expense/getDownloadUrl', {
-            headers: {
-                "Authorization": token
-            }
-        });
+        const result = await axios.get('/expense/viewReportExpensesData');
+        const yearlyResult = await axios.get('/expense/viewYearlyExpensesData');
+        const DownloadUrl = await axios.get('/expense/getDownloadUrl');
 
         const currentDate = moment();
         const formattedDate = currentDate.format('L');
@@ -244,12 +231,7 @@ async function downloadData(type) {
     };
 
     try {
-        const token = localStorage.getItem('token');
-        const response = await axios.post('/expense/download', queryParams, {
-            headers: {
-                "Authorization": token
-            }
-        });
+        const response = await axios.post('/expense/download', queryParams);
 
         var a = document.createElement('a');
         a.href = response.data.fileUrl;
