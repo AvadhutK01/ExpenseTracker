@@ -14,15 +14,17 @@ const forgetPasswordModel = require('./Models/forgetPasswordModel');
 const moneyData = require('./Models/moneyModel');
 const DurlDb = require('./Models/filesDownloadUrlModel');
 const yearlyReportDb = require('./Models/YearlyReportModel');
-const fs = require('fs');
+// const fs = require('fs');
 const compression = require('compression');
-const morgan = require('morgan');
+// const morgan = require('morgan');
 const app = express();
-const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
+// const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
 app.use(compression());
-app.use(morgan('combined', { stream: accessLogStream }))
+// app.use(morgan('combined', { stream: accessLogStream }))
 app.use(express.static(path.join(__dirname, '..', 'Frontend', 'public')));
-app.use(cors());
+app.use(cors({
+    origin: '*'
+}));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json())
 app.use("/user", userRoute);

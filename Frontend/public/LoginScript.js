@@ -18,7 +18,7 @@ if (btnSubmit) {
                 const expiryDate = new Date();
                 expiryDate.setDate(expiryDate.getDate() + 1);
                 const expires = expiryDate.toUTCString();
-                document.cookie = `token=${token}; expires=${expires}; path=/`;
+                document.cookie = `ExpenseToken=${token}; expires=${expires}; path=/`;
                 window.location.href = '/expense/MainHome';
             }
         } catch (error) {

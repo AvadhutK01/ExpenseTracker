@@ -88,7 +88,7 @@ Premiumbtn.addEventListener('click', async (e) => {
         const response = await axios.get('/payment/premiummember');
         const options = {
             "key": response.data.key_id,
-            "order_id": response.data.result.id,
+            "order_id": response.data.order.id,
             "handler": async (response) => {
                 let result = await axios.post('/payment/updateTransacation', {
                     order_id: options.order_id,

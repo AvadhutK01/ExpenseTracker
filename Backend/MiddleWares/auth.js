@@ -7,7 +7,7 @@ const authenticateUser = async (req, res, next) => {
     try {
         const cookies = cookie.parse(req.headers.cookie || ''); // Parse cookies from the request headers
 
-        const token = cookies.token; // Get the token from the "token" cookie
+        const token = cookies.ExpenseToken; // Get the token from the "token" cookie
         console.log(token);
 
         if (!token) {
